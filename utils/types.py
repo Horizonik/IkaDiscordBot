@@ -65,16 +65,42 @@ class IslandTypes(Enum):
         raise ValueError(f"No IslandType found for value: {value}")
 
 
+class WonderTypes(Enum):
+    """Converts the numeric value from the 'trade-good' var into the string type of the island."""
+    FORGE = 1
+    HADES = 2
+    DEMETERS = 3
+    ATHENA = 4
+    HERMES = 5
+    ARES = 6
+    POSEIDON = 7
+    COLOSSUS = 8
+
+    def __str__(self):
+        return self.name.lower()  # Returns the name in lowercase
+
+    @classmethod
+    def from_value(cls, value):
+        """Get the string name for a given numeric value."""
+        for miracle in cls:
+            if miracle.value == value:
+                return str(miracle)
+        raise ValueError(f"No WonderType found for value: {value}")
+
+
 class CityInfo:
     coords: tuple[int, int]
     x: int
     y: int
 
-    tradegood: int
-    tradegood_type: str
-    island_wood: int
-    island_tradegood: int
-    island_wonder: int
+    tradegood: int  # the ID of the resource of the island
+    tradegood_type: str  # the str name of the resource of the island
+    island_wood: int  # the level of the island's wood mine
+    island_tradegood: int  # the level of the island's resource mine
+
+    wonder: int  # the ID of the wonder of the island
+    wonder_type: str  # the str name of the wonder of the island
+    island_wonder: int  # the level of the island's wonder
 
     city_level: int
     city_name: str
@@ -90,6 +116,9 @@ class CityInfo:
 
         # Convert trade-good ID to a string identification of the trade-good
         setattr(self, 'tradegood_type', IslandTypes.from_value(data['tradegood']))
+
+        # Convert wonder ID to a string identification of the wonder
+        setattr(self, 'wonder_type', WonderTypes.from_value(data['wonder']))
 
         # Put x,y coords into a tuple for ease of use later on
         setattr(self, 'coords', (data['x'], data['y']))

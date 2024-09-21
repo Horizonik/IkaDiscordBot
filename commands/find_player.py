@@ -41,18 +41,19 @@ class FindPlayer(BaseCommand):
                               color=discord.Color.orange())
 
         # Create the header row
-        header = f"{'Coords':<10} {'City Name':<19} {'Resource':<11}\n"
+        header = f"{'Coords':<10} {'City Name':<15} {'Resource':<13} {'Wonder':<9}\n"
         separator = '-' * 56 + '\n'
         table_rows = ""
 
         for city in cities_data:
             # Truncate city name if it's longer than 20 characters
-            city_name = city.city_name if len(city.city_name) <= 15 else city.city_name[:12] + '..'
+            city_name = city.city_name if len(city.city_name) <= 13 else city.city_name[:11] + '..'
 
             table_rows += (
                 f"{str(city.coords):<10} "  # Convert tuple to string
-                f"[{city.city_level:<2}] {city_name:<15}"
-                f"[{city.island_tradegood:<2}] {city.tradegood_type.capitalize():<7}\n"
+                f"[{city.city_level:<2}] {city_name:<13} "
+                f"[{city.island_tradegood:<2}] {city.tradegood_type.capitalize():<7} "
+                f"[{city.island_wonder:<1}] {city.wonder_type.capitalize():<7} \n"
             )
 
         # Combine header, separator, and rows
