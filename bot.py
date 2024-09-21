@@ -36,14 +36,13 @@ async def run_command(interaction, command_class, command_params: dict = None):
     await command_class_instance.run()
 
 
-
 ###
 # COMMANDS
 ###
 @client.tree.command()
 @app_commands.describe(**CALCULATE_CLUSTERS_DESCRIPTION)
 async def calculate_clusters(interaction: discord.Interaction, alliance_name: str, min_cities_per_island: int, max_cluster_distance: int, min_cities_per_cluster: int):
-    """Calculates clusters based on the minimum number of cities"""
+    """Calculates which island groups have the most cities from the selected alliance"""
     await run_command(interaction, CalculateClusters, {
         'alliance_name': alliance_name,
         'min_cities_per_island': min_cities_per_island,
@@ -64,7 +63,7 @@ async def calculate_clusters(interaction: discord.Interaction, alliance_name: st
 @client.tree.command()
 @app_commands.describe(**FIND_PLAYER_DESCRIPTION)
 async def find_player(interaction: discord.Interaction, player_name: str, alliance_name: str = None):
-    """Generates a heatmap based on the alliance and minimum cities"""
+    """Retrieves information about the player's cities locations"""
     await run_command(interaction, FindPlayer, {"player_name": player_name, "alliance_name": alliance_name})
 
 
@@ -83,7 +82,7 @@ async def travel_time(interaction: discord.Interaction, unit_type: str, start_co
 @client.tree.command()
 @app_commands.describe(**CLOSEST_CITY_TO_TARGET_DESCRIPTION)
 async def closest_city_to_target(interaction: discord.Interaction, player_name: str, coords: str):
-    """Calculates estimated travel time for units based on type and coordinates"""
+    """Checks which of the player's city is the closest to the target island"""
     await run_command(interaction, ClosestCityToTarget, {
         "player_name": player_name,
         "coords": coords
