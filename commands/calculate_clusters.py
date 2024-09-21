@@ -1,94 +1,99 @@
 from itertools import product
+
+import discord
+
 from utils.types import BaseCommand, CityInfo, ClusterInfo
 from utils.utils import (
     fetch_data,
-    convert_data_to_markdown,
-    filter_data_by_min_amount_of_cities_on_island,
-    count_cities_per_island, get_islands_info
+    count_cities_per_island,
+    convert_data_to_embed, generate_cluster_name
 )
 
 
 class CalculateClusters(BaseCommand):
 
-    def __init__(self, command_initiator_name: str, command_name: str, params: dict):
-        super().__init__(command_initiator_name, command_name)
+    def __init__(self, ctx: discord.Interaction, params: dict):
+        super().__init__(ctx, params)
         self.command_params = params
 
-    def command_logic(self):
-        cities_data = fetch_data(self.command_params['alliance_name'])
+    async def command_logic(self):
+        cities_data = fetch_data(f"state=active&search=ally&allies[1]={self.command_params['alliance_name']}")
 
         city_counts = count_cities_per_island(cities_data)
-        filtered_cities_data = filter_data_by_min_amount_of_cities_on_island(
+        filtered_cities_data = self.filter_data_by_min_amount_of_cities_on_island(
             cities_data,
-            city_counts,
-            self.command_params['min_cities_on_island']
+            city_counts
         )
 
-        city_clusters = self.cluster_cities(filtered_cities_data, city_counts)
-        clusters_info = self.create_clusters_info_objects(city_clusters, city_counts)
+        city_clusters = self.cluster_cities(filtered_cities_data)
+        clusters_as_objects = self.convert_raw_clusters_to_objects(city_clusters, city_counts)
 
-        return convert_data_to_markdown(clusters_info)
+        # Create the embed message instead of markdown
+        embed = convert_data_to_embed(clusters_as_objects)
+        await self.ctx.response.send_message(embed=embed)
 
-    def cluster_cities(self, cities_data: list[CityInfo], city_counts: dict) -> list:
-        """Uses a DFS algorithm to determine which adjacent islands have the most cities total and saves them as a group (cluster)"""
-        # TODO Note to self, might have an issue here due to no longer using a set on the city coords (same coords can get processed)
-        max_islands_distance = self.command_params['max_distance']  # Max distance for clustering
+    def cluster_cities(self, cities_data: list[CityInfo]) -> list[list[CityInfo]]:
+        coord_set = set(city.coords for city in cities_data)
         visited = set()
         clusters = []
 
         # Helper function for depth-first search
         def depth_first_search(city: CityInfo, cluster: list):
-            stack = [city.coords]
+            stack = [city]
             while stack:
-                current = stack.pop()
-                if current in visited:
+                current_city = stack.pop()
+                if current_city.coords in visited:
                     continue
-                visited.add(current)
-                cluster.append(city)
+                visited.add(current_city.coords)
+                cluster.append(current_city)
 
                 # Only check relevant neighbors within the given distance
-                for dx, dy in product(range(-max_islands_distance, max_islands_distance + 1), repeat=2):
+                for dx, dy in product(range(-self.command_params['max_cluster_distance'],
+                                            self.command_params['max_cluster_distance'] + 1), repeat=2):
                     if dx == 0 and dy == 0:
                         continue
 
-                    neighbor = (current[0] + dx, current[1] + dy)
-                    if abs(dx) <= max_islands_distance and abs(dy) <= max_islands_distance:
-                        for city in cities_data:
-                            if city.coords == neighbor and neighbor not in visited:
+                    neighbor_coords = (current_city.coords[0] + dx, current_city.coords[1] + dy)
+                    if neighbor_coords in coord_set and neighbor_coords not in visited:
+                        for neighbor in cities_data:
+                            if neighbor.coords == neighbor_coords:
                                 stack.append(neighbor)
-                                break  # No need to check further if found
+                                break  # Stop searching once we found the first matching neighbor
 
         # Start clustering cities
         for city in cities_data:
             if city.coords not in visited:
                 cluster = []
                 depth_first_search(city, cluster)
-                clusters.append(cluster)
+                if cluster:  # Only add non-empty clusters
+                    clusters.append(cluster)
 
-        return self.filter_clusters_by_min_city_count(clusters, city_counts)
+        return clusters
 
-    def filter_clusters_by_min_city_count(self, city_clusters: list, city_counts: dict) -> list:
+    def filter_data_by_min_amount_of_cities_on_island(self, cities_data: list[CityInfo], city_counts: dict) -> list:
+        return [city for city in cities_data if
+                city_counts[city.coords] >= self.command_params['min_cities_per_island']]
+
+    def filter_clusters_by_city_count(self, clusters: list, city_counts: dict) -> list:
         filtered_clusters = []
-        for cluster in city_clusters:
+        for cluster in clusters:
             if any(city_counts.get(city.coords, 0) >= self.command_params['min_cities_per_cluster'] for city in
                    cluster):
                 filtered_clusters.append(cluster)
-
         return filtered_clusters
 
-    def create_clusters_info_objects(self, city_clusters: list, city_counts: dict) -> list[ClusterInfo]:
-        clusters_info = []
-        for cluster in city_clusters:
-            total_cities = sum(city_counts.get(city.coords, 0) for city in cluster)
+    def convert_raw_clusters_to_objects(self, clusters: list[list[CityInfo]], city_counts: dict) -> list[ClusterInfo]:
+        cluster_infos = []
+        cluster_index = 1
 
-            if total_cities >= self.command_params['min_cities_per_cluster']:
-                cluster_name = f"City Cluster {len(clusters_info) + 1}"
-                islands = get_islands_info(cluster)
-                clusters_info.append(ClusterInfo(
-                    name=cluster_name,
-                    rating=total_cities,
-                    cities=cluster,
-                    islands=islands
-                ))
+        for cluster_cities in clusters:
+            cluster_name = f"{generate_cluster_name()} [#{chr(65 + cluster_index - 1)}]"
+            total_cities = sum(city_counts.get(city.coords, 0) for city in cluster_cities)
 
-        return clusters_info
+            if total_cities < self.command_params['min_cities_per_cluster']:
+                continue
+
+            cluster_infos.append(ClusterInfo(cluster_name, -1, cluster_cities))
+            cluster_index += 1
+
+        return cluster_infos

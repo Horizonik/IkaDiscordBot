@@ -1,3 +1,4 @@
+import discord
 import plotly.express as px
 import pandas as pd
 import numpy as np
@@ -8,12 +9,12 @@ from utils.utils import fetch_data, filter_data_by_min_amount_of_cities_on_islan
 
 class GenerateHeatmap(BaseCommand):
 
-    def __init__(self, command_initiator_name: str, command_name: str, params: dict):
-        super().__init__(command_initiator_name, command_name)
+    def __init__(self, ctx: discord.Interaction, params: dict):
+        super().__init__(ctx, params)
         self.command_params = params
 
     def command_logic(self):
-        cities_data = fetch_data(self.command_params['alliance_name'])
+        cities_data = fetch_data(f"state=active&search=ally&allies[1]={self.command_params['alliance_name']}")
         city_counts = count_cities_per_island(cities_data)
 
         filtered_cities_data = filter_data_by_min_amount_of_cities_on_island(

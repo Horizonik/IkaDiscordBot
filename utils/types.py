@@ -1,49 +1,59 @@
-from contextlib import contextmanager
 from enum import Enum
-from typing import Any
+
 import datetime
+import discord
 
 
 class BaseCommand:
     """This class implements the basics that every command requires"""
-    command_initiator_name: str
-    command_name: str
+    ctx: discord.Interaction
     command_params: dict
-    command_start_time: datetime
+    command_start_time: datetime.datetime
 
-    def __init__(self, command_initiator_name: str, command_name: str):
+    def __init__(self, ctx: discord.Interaction, command_params: dict):
         # Gather basic information about queued command run
-        self.command_initiator_name = command_initiator_name
-        self.command_name = command_name
+        self.ctx = ctx
+        self.command_params = command_params
         self.command_start_time = datetime.datetime.now()
 
-    def log_at_run_end(self):
-        print(f"{datetime.datetime.now()} | Finished running the '{self.command_name}' command!")
+    async def log_at_run_end(self):
+        print(f"{datetime.datetime.now()} | Finished running the '{self.ctx.command.name}' command!")
 
-    def run(self) -> Any:
+    async def run(self):
         """Run logic for the command"""
         print(
-            f"{self.command_start_time} | User {self.command_initiator_name} ran the '{self.command_name}' command with params {self.command_params}")
-        self.execute_with_logging()
+            f"{self.command_start_time} | User {self.ctx.user.name} ran the '{self.ctx.command.name}' command with params {self.command_params}")
+        await self.execute_with_logging()
 
-    def execute_with_logging(self):
+    async def execute_with_logging(self):
         """Execute the command logic and log after completion."""
         try:
-            self.command_logic()  # Call the logic defined in subclasses
+            await self.command_logic()  # Call the logic defined in subclasses
         finally:
-            self.log_at_run_end()
+            await self.log_at_run_end()
 
-    def command_logic(self):
+    async def command_logic(self):
         """This should be implemented in subclasses"""
         raise NotImplementedError("Subclasses must implement command_logic method.")
 
 
 class IslandTypes(Enum):
-    """Converts the numeric value from the 'trade-good' var into the string type of the island"""
+    """Converts the numeric value from the 'trade-good' var into the string type of the island."""
     VINE = 1
     MARBLE = 2
     CRYSTAL = 3
     SULPHUR = 4
+
+    def __str__(self):
+        return self.name.lower()  # Returns the name in lowercase
+
+    @classmethod
+    def from_value(cls, value):
+        """Get the string name for a given numeric value."""
+        for island in cls:
+            if island.value == value:
+                return str(island)
+        raise ValueError(f"No IslandType found for value: {value}")
 
 
 class CityInfo:
@@ -52,11 +62,13 @@ class CityInfo:
     y: int
 
     tradegood: int
-    tradegood_type: IslandTypes
+    tradegood_type: str
     island_wood: int
     island_tradegood: int
     island_wonder: int
+
     city_level: int
+    city_name: str
 
     player_name: str
     player_score: int
@@ -68,7 +80,7 @@ class CityInfo:
                 setattr(self, attr, data[attr])
 
         # Convert trade-good ID to a string identification of the trade-good
-        setattr(self, 'tradegood_type', IslandTypes(data['tradegood']))
+        setattr(self, 'tradegood_type', IslandTypes.from_value(data['tradegood']))
 
         # Put x,y coords into a tuple for ease of use later on
         setattr(self, 'coords', (data['x'], data['y']))
@@ -115,7 +127,7 @@ class ClusterInfo:
     cities: list[CityInfo]
     islands: list[IslandInfo]
 
-    def __init__(self, name: str, rating: int, cities: list[CityInfo], islands: list[IslandInfo]):
+    def __init__(self, name: str, rating: int, cities: list[CityInfo], islands: list[IslandInfo] = None):
         self.name = name
         self.rating = rating
         self.cities = cities  # List of CityInfo instances
