@@ -5,7 +5,12 @@ from commands.calculate_clusters import CalculateClusters
 from commands.travel_time import CalculateTravelTime
 from commands.find_player import FindPlayer
 from commands.generate_heatmap import GenerateHeatmap
-from commands.test import TestMessage, TestImage, TestEmbed
+from commands.command_descriptions import (
+    calculate_clusters_description,
+    generate_heatmap_description,
+    find_player_description,
+    travel_time_description
+)
 
 
 class MyClient(discord.Client):
@@ -18,13 +23,18 @@ class MyClient(discord.Client):
         await self.tree.sync()
 
 
-# Define the bot's intents
 intents = discord.Intents.default()
-intents.messages = True  # If you need to listen to messages
+intents.messages = True
 intents.message_content = True
 
 client = MyClient(intents=intents)
 BOT_TOKEN = os.getenv('BOT_TOKEN')
+
+
+@client.event
+async def on_ready():
+    print(f'Logged in as {client.user} (ID: {client.user.id})')
+    print('------')
 
 
 async def run_command(interaction, command_class, command_params: dict = None):
@@ -37,43 +47,11 @@ async def run_command(interaction, command_class, command_params: dict = None):
     await command_class_instance.run()
 
 
-@client.event
-async def on_ready():
-    print(f'Logged in as {client.user} (ID: {client.user.id})')
-    print('------')
-
-
 #####
-# TEST COMMANDS
+# COMMANDS
 #####
 @client.tree.command()
-async def test_message(interaction: discord.Interaction):
-    """Sends a test message"""
-    await run_command(interaction, TestMessage)
-
-
-@client.tree.command()
-async def test_embed(interaction: discord.Interaction):
-    """Sends a test embed"""
-    await run_command(interaction, TestEmbed)
-
-
-@client.tree.command()
-async def test_image(interaction: discord.Interaction):
-    """Sends a test image"""
-    await run_command(interaction, TestImage)
-
-
-#####
-# PRACTICAL COMMANDS
-#####
-@client.tree.command()
-@app_commands.describe(
-    alliance_name="Name of the alliance to calculate clusters for",
-    min_cities_per_island="Minimum number of cities required on an island for it to be included",
-    max_cluster_distance="Maximum distance between islands to be considered in the same cluster",
-    min_cities_per_cluster="Minimum amount of cities required for a cluster to be included"
-)
+@app_commands.describe(**calculate_clusters_description)
 async def calculate_clusters(
         interaction: discord.Interaction,
         alliance_name: str,
@@ -91,10 +69,7 @@ async def calculate_clusters(
 
 
 @client.tree.command()
-@app_commands.describe(
-    alliance_name="Name of the alliance",
-    min_cities_on_island="Minimum cities on an island"
-)
+@app_commands.describe(**generate_heatmap_description)
 async def generate_heatmap(interaction: discord.Interaction, alliance_name: str, min_cities_on_island: int):
     """Generates a heatmap based on the alliance and minimum cities"""
     await run_command(interaction, GenerateHeatmap,
@@ -102,22 +77,14 @@ async def generate_heatmap(interaction: discord.Interaction, alliance_name: str,
 
 
 @client.tree.command()
-@app_commands.describe(
-    player_name="The name of the player",
-    alliance_name="Optional - Name of the alliance the player belongs to"
-)
+@app_commands.describe(**find_player_description)
 async def find_player(interaction: discord.Interaction, player_name: str, alliance_name: str = None):
     """Generates a heatmap based on the alliance and minimum cities"""
     await run_command(interaction, FindPlayer, {"player_name": player_name, "alliance_name": alliance_name})
 
 
 @client.tree.command()
-@app_commands.describe(
-    unit_type="LAND/SEA",
-    start_coords="The coords that the units come from",
-    destination_coords="The desired destination for the units",
-    using_poseidon="Are you using the Poseidon miracle (100% reduction)?"
-)
+@app_commands.describe(**travel_time_description)
 async def travel_time(
         interaction: discord.Interaction,
         unit_type: str, start_coords: str,
