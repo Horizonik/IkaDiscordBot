@@ -43,7 +43,7 @@ class FindPlayer(BaseCommand):
 
         for city in cities_data:
             # Truncate city name if it's longer than 20 characters
-            city_name = city.city_name if len(city.city_name) <= 15 else city.city_name[:17] + '...'
+            city_name = city.city_name if len(city.city_name) <= 15 else city.city_name[:12] + '..'
 
             table_rows += (
                 f"{str(city.coords):<10} "  # Convert tuple to string
