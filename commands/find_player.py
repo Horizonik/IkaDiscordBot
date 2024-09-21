@@ -28,7 +28,7 @@ class FindPlayer(BaseCommand):
         )
 
         # Filter out any startsWith matches, only exact name matches will remain
-        cities_data = [city for city in cities_data if city.player_name == self.command_params['player_name']]
+        cities_data = [city for city in cities_data if city.player_name.lower() == self.command_params['player_name']]
 
         # Sort cities by their coordinates
         cities_data.sort(key=lambda city: (city.coords[0], city.coords[1]))
