@@ -64,7 +64,7 @@ async def calculate_clusters(interaction: discord.Interaction, alliance_name: st
 @app_commands.describe(**FIND_PLAYER_DESCRIPTION)
 async def find_player(interaction: discord.Interaction, player_name: str, alliance_name: str = None):
     """Retrieves information about the player's cities locations"""
-    await run_command(interaction, FindPlayer, {"player_name": player_name, "alliance_name": alliance_name})
+    await run_command(interaction, FindPlayer, {"player_name": player_name.lower(), "alliance_name": alliance_name})
 
 
 @client.tree.command()
