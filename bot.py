@@ -5,10 +5,8 @@ from commands.calculate_clusters import CalculateClusters
 from commands.closest_city_to_target import ClosestCityToTarget
 from commands.travel_time import CalculateTravelTime
 from commands.find_player import FindPlayer
-from commands.generate_heatmap import GenerateHeatmap
 from commands.command_descriptions import (
     CALCULATE_CLUSTERS_DESCRIPTION,
-    GENERATE_HEATMAP_DESCRIPTION,
     FIND_PLAYER_DESCRIPTION,
     TRAVEL_TIME_DESCRIPTION, CLOSEST_CITY_TO_TARGET_DESCRIPTION
 )
@@ -54,12 +52,13 @@ async def calculate_clusters(interaction: discord.Interaction, alliance_name: st
     })
 
 
-@client.tree.command()
-@app_commands.describe(**GENERATE_HEATMAP_DESCRIPTION)
-async def generate_heatmap(interaction: discord.Interaction, alliance_name: str, min_cities_on_island: int):
-    """Generates a heatmap based on the alliance and minimum cities"""
-    await run_command(interaction, GenerateHeatmap,
-                      {"alliance_name": alliance_name, "min_cities": min_cities_on_island})
+# TODO - Disabled until further notice. Need to generate the heatmap as an image that can be sent to discord.
+# @client.tree.command()
+# @app_commands.describe(**GENERATE_HEATMAP_DESCRIPTION)
+# async def generate_heatmap(interaction: discord.Interaction, alliance_name: str, min_cities_on_island: int):
+#     """Generates a heatmap based on the alliance and minimum cities"""
+#     await run_command(interaction, GenerateHeatmap,
+#                       {"alliance_name": alliance_name, "min_cities": min_cities_on_island})
 
 
 @client.tree.command()
