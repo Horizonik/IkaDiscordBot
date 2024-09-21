@@ -18,8 +18,13 @@ class FindPlayer(BaseCommand):
 
     async def command_logic(self):
         alliance_name = self.command_params['alliance_name']
+        player_name = self.command_params['player_name']
+
+        if len(player_name) < 3 or len(player_name) > 15:
+            raise ValueError(f"a player that goes by the name of '{player_name}' doesn't exist!")
+
         cities_data = fetch_data(
-            f"state=&search=city&nick={self.command_params['player_name']}{f'&ally={alliance_name}' if alliance_name else ''}"
+            f"state=&search=city&nick={player_name}{f'&ally={alliance_name}' if alliance_name else ''}"
         )
 
         # Filter out any startsWith matches, only exact name matches will remain
@@ -31,10 +36,9 @@ class FindPlayer(BaseCommand):
         embed = self.create_city_table_embed(cities_data)
         await self.ctx.response.send_message(embed=embed)
 
-        # TODO Produce discord embed
-
     def create_city_table_embed(self, cities_data: list[CityInfo]) -> discord.Embed:
-        embed = discord.Embed(title=f"{self.command_params['player_name']}'s City Information", color=discord.Color.orange())
+        embed = discord.Embed(title=f"{self.command_params['player_name']}'s City Information",
+                              color=discord.Color.orange())
 
         # Create the header row
         header = f"{'Coords':<10} {'City Name':<19} {'Resource':<11}\n"

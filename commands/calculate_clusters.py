@@ -6,7 +6,7 @@ from utils.types import BaseCommand, CityInfo, ClusterInfo
 from utils.utils import (
     fetch_data,
     count_cities_per_island,
-    convert_data_to_embed, generate_cluster_name
+    generate_cluster_name
 )
 
 
@@ -18,6 +18,8 @@ class CalculateClusters(BaseCommand):
 
     async def command_logic(self):
         cities_data = fetch_data(f"state=active&search=ally&allies[1]={self.command_params['alliance_name']}")
+        if not cities_data:
+            raise ValueError(f"alliance '{self.command_params['alliance_name']}' doesn't exist or has no data!")
 
         city_counts = count_cities_per_island(cities_data)
         filtered_cities_data = self.filter_data_by_min_amount_of_cities_on_island(
@@ -26,11 +28,46 @@ class CalculateClusters(BaseCommand):
         )
 
         city_clusters = self.cluster_cities(filtered_cities_data)
-        clusters_as_objects = self.convert_raw_clusters_to_objects(city_clusters, city_counts)
+        # TODO - make ClusterInfo class work with the final formatting so that we can get more data about the cities in the clusters.
+        # clusters_as_objects = self.convert_raw_clusters_to_objects(city_clusters, city_counts)
+        # embed = convert_data_to_embed(clusters_as_objects)
 
-        # Create the embed message instead of markdown
-        embed = convert_data_to_embed(clusters_as_objects)
+        clusters_as_str = self.clusters_to_str(city_clusters, city_counts)
+        embed = self.get_result_as_embed(clusters_as_str)
         await self.ctx.response.send_message(embed=embed)
+
+    def get_result_as_embed(self, clusters_as_str: list[str]) -> discord.Embed:
+        embed = discord.Embed(title="City Clusters", color=discord.Color.blue())
+
+        for cluster in clusters_as_str:
+            cluster_lines = cluster.split('\n')
+            header = cluster_lines[0]
+            description = '\n'.join(cluster_lines[1:])
+
+            embed.add_field(name=header, value=description, inline=False)
+
+        return embed
+
+    def clusters_to_str(self, clusters: list[list[CityInfo]], city_counts: dict) -> list[str]:
+        formatted_clusters = []
+        cluster_index = 1
+
+        for cluster in clusters:
+            cluster_name = f"{generate_cluster_name()} [Cluster {chr(65 + cluster_index - 1)}]"
+            total_cities = sum(city_counts.get(city.coords, 0) for city in cluster)
+
+            if total_cities < self.command_params['min_cities_per_cluster']:
+                continue
+
+            cluster_str = [f"{cluster_name} - total of {total_cities}"]
+            for city in cluster:
+                count = city_counts.get(city.coords, 0)
+                cluster_str.append(f"- {city.x}:{city.y} -> {count} cities")
+
+            formatted_clusters.append("\n".join(cluster_str))
+            cluster_index += 1
+
+        return formatted_clusters
 
     def cluster_cities(self, cities_data: list[CityInfo]) -> list[list[CityInfo]]:
         coord_set = set(city.coords for city in cities_data)

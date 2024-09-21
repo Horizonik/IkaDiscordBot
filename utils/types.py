@@ -2,6 +2,7 @@ from enum import Enum
 
 import datetime
 import discord
+from discord import app_commands
 
 
 class BaseCommand:
@@ -21,14 +22,22 @@ class BaseCommand:
 
     async def run(self):
         """Run logic for the command"""
-        print(
-            f"{self.command_start_time} | User {self.ctx.user.name} ran the '{self.ctx.command.name}' command with params {self.command_params}")
+        print(f"{self.command_start_time} | User {self.ctx.user.name} ran the '{self.ctx.command.name}' command with params {self.command_params}")
         await self.execute_with_logging()
 
     async def execute_with_logging(self):
         """Execute the command logic and log after completion."""
         try:
             await self.command_logic()  # Call the logic defined in subclasses
+
+        except Exception as e:
+            embed = discord.Embed(
+                title="Error",
+                description=f"An error occurred: {str(e)}",
+                color=discord.Color.red()
+            )
+            await self.ctx.response.send_message(embed=embed)
+
         finally:
             await self.log_at_run_end()
 
@@ -140,3 +149,13 @@ class ClusterInfo:
             f"cities_count={len(self.cities)}, "
             f"islands_count={len(self.islands)})>"
         )
+
+
+class DiscordBotClient(discord.Client):
+    def __init__(self, *, intents: discord.Intents):
+        super().__init__(intents=intents)
+        self.tree = app_commands.CommandTree(self)
+
+    async def setup_hook(self):
+        # Sync commands globally to all servers the bot is in
+        await self.tree.sync()

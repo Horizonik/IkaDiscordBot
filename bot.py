@@ -2,32 +2,23 @@ import os
 import discord
 from discord import app_commands
 from commands.calculate_clusters import CalculateClusters
+from commands.closest_city_to_target import ClosestCityToTarget
 from commands.travel_time import CalculateTravelTime
 from commands.find_player import FindPlayer
 from commands.generate_heatmap import GenerateHeatmap
 from commands.command_descriptions import (
-    calculate_clusters_description,
-    generate_heatmap_description,
-    find_player_description,
-    travel_time_description
+    CALCULATE_CLUSTERS_DESCRIPTION,
+    GENERATE_HEATMAP_DESCRIPTION,
+    FIND_PLAYER_DESCRIPTION,
+    TRAVEL_TIME_DESCRIPTION, CLOSEST_CITY_TO_TARGET_DESCRIPTION
 )
-
-
-class MyClient(discord.Client):
-    def __init__(self, *, intents: discord.Intents):
-        super().__init__(intents=intents)
-        self.tree = app_commands.CommandTree(self)
-
-    async def setup_hook(self):
-        # Sync commands globally to all servers the bot is in
-        await self.tree.sync()
-
+from utils.types import DiscordBotClient
 
 intents = discord.Intents.default()
 intents.messages = True
 intents.message_content = True
 
-client = MyClient(intents=intents)
+client = DiscordBotClient(intents=intents)
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 
 
@@ -47,18 +38,13 @@ async def run_command(interaction, command_class, command_params: dict = None):
     await command_class_instance.run()
 
 
-#####
+
+###
 # COMMANDS
-#####
+###
 @client.tree.command()
-@app_commands.describe(**calculate_clusters_description)
-async def calculate_clusters(
-        interaction: discord.Interaction,
-        alliance_name: str,
-        min_cities_per_island: int,
-        max_cluster_distance: int,
-        min_cities_per_cluster: int
-):
+@app_commands.describe(**CALCULATE_CLUSTERS_DESCRIPTION)
+async def calculate_clusters(interaction: discord.Interaction, alliance_name: str, min_cities_per_island: int, max_cluster_distance: int, min_cities_per_cluster: int):
     """Calculates clusters based on the minimum number of cities"""
     await run_command(interaction, CalculateClusters, {
         'alliance_name': alliance_name,
@@ -69,7 +55,7 @@ async def calculate_clusters(
 
 
 @client.tree.command()
-@app_commands.describe(**generate_heatmap_description)
+@app_commands.describe(**GENERATE_HEATMAP_DESCRIPTION)
 async def generate_heatmap(interaction: discord.Interaction, alliance_name: str, min_cities_on_island: int):
     """Generates a heatmap based on the alliance and minimum cities"""
     await run_command(interaction, GenerateHeatmap,
@@ -77,20 +63,15 @@ async def generate_heatmap(interaction: discord.Interaction, alliance_name: str,
 
 
 @client.tree.command()
-@app_commands.describe(**find_player_description)
+@app_commands.describe(**FIND_PLAYER_DESCRIPTION)
 async def find_player(interaction: discord.Interaction, player_name: str, alliance_name: str = None):
     """Generates a heatmap based on the alliance and minimum cities"""
     await run_command(interaction, FindPlayer, {"player_name": player_name, "alliance_name": alliance_name})
 
 
 @client.tree.command()
-@app_commands.describe(**travel_time_description)
-async def travel_time(
-        interaction: discord.Interaction,
-        unit_type: str, start_coords: str,
-        destination_coords: str,
-        using_poseidon: bool = False
-):
+@app_commands.describe(**TRAVEL_TIME_DESCRIPTION)
+async def travel_time(interaction: discord.Interaction, unit_type: str, start_coords: str, destination_coords: str, using_poseidon: bool = False):
     """Calculates estimated travel time for units based on type and coordinates"""
     await run_command(interaction, CalculateTravelTime, {
         "unit_type": unit_type,
@@ -100,5 +81,14 @@ async def travel_time(
     })
 
 
-# Run the bot
+@client.tree.command()
+@app_commands.describe(**CLOSEST_CITY_TO_TARGET_DESCRIPTION)
+async def closest_city_to_target(interaction: discord.Interaction, player_name: str, coords: str):
+    """Calculates estimated travel time for units based on type and coordinates"""
+    await run_command(interaction, ClosestCityToTarget, {
+        "player_name": player_name,
+        "coords": coords
+    })
+
+
 client.run(BOT_TOKEN)

@@ -1,4 +1,5 @@
 import json
+import math
 import os
 import random
 from collections import defaultdict
@@ -45,6 +46,7 @@ def fetch_data(query: str) -> list[CityInfo]:
         return [CityInfo(row) for row in data]
     else:
         raise ValueError("Error! Page did not return any JSON data!")
+
 
 # 'https://ikalogs.ru/common/report/index/?report=User_WorldFind&query=server%3D2%26world%3D57%26state%3D%26search%3Dcity%26nick%3DGemmy%26ally%3DNone%26limit%3D5000&order=asc&sort=nick&start=0&limit=5000'
 
@@ -148,3 +150,11 @@ def generate_cluster_name() -> str:
     ]
 
     return f"{random.choice(prefixes)}{random.choice(suffixes)}"
+
+
+def get_closest_city_to_target(city_coords: tuple, target_coords: tuple):
+    """Calculates which city is the closest to the target location using the euclidean distance formula"""
+    x1, y1 = city_coords
+    x2, y2 = target_coords
+
+    return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
