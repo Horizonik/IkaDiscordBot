@@ -1,0 +1,39 @@
+# Ignore virtual environment directory
+venv/
+
+# Ignore all files under the data directory, but allow .gitkeep
+data/*
+!data/.gitkeep
+
+# Ignore IDE configurations
+.idea/
+
+# Ignore Python bytecode files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore environment variable files
+.env
+
+# Ignore pytest cache
+.cache/
+
+# Ignore coverage reports
+.coverage
+coverage.xml
+*.cover
+*.py,cover
+
+# Ignore mypy and pylint configuration files
+.mypy_cache/
+.pylint.d/
+
+# Ignore build artifacts
+build/
+dist/
+*.egg-info/
