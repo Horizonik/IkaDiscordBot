@@ -125,23 +125,10 @@ async def travel_time(
         using_poseidon: bool = False
 ):
     """Calculates estimated travel time for units based on type and coordinates"""
-    # Validate unit type
-    if unit_type.lower() not in ["land", "sea"]:
-        await interaction.response.send_message("Invalid unit type! Please use 'land' or 'sea'.")
-        return
-
-    # Validate and parse start coordinates
-    try:
-        start_x, start_y = map(int, start_coords.split(':'))
-        dest_x, dest_y = map(int, destination_coords.split(':'))
-    except ValueError:
-        await interaction.response.send_message("Invalid start coordinates format! Please use 'X:Y'.")
-        return
-
     await run_command(interaction, CalculateTravelTime, {
-        "unit_type": unit_type.lower(),
-        "start_coords": (start_x, start_y),
-        "destination_coords": (dest_x, dest_y),
+        "unit_type": unit_type,
+        "start_coords": start_coords,
+        "destination_coords": destination_coords,
         "using_poseidon": using_poseidon
     })
 

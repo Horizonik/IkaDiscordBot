@@ -11,14 +11,24 @@ class CalculateTravelTime(BaseCommand):
 
     async def command_logic(self):
         unit_type = self.command_params['unit_type']
-        start_coords = self.command_params['start_coords']  # Expecting a tuple (x1, y1)
-        destination_coords = self.command_params['destination_coords']  # Expecting a tuple (x2, y2)
         using_poseidon = self.command_params['using_poseidon']
 
-        # Define speeds for land and sea units
+        # Validate and parse start coordinates
+        try:
+            start_x, start_y = map(int, self.command_params['start_coords'].split(':'))
+            dest_x, dest_y = map(int, self.command_params['destination_coords'].split(':'))
+
+        except ValueError:
+            await self.ctx.response.send_message("Invalid start coordinates format! Please use 'XX:YY'.")
+            return
+
+        start_coords = (start_x, start_y)
+        destination_coords = (dest_x, dest_y)
+
+        # Speeds for land and sea units
         speeds = {
-            "land": 3,  # units per hour
-            "sea": 2  # units per hour
+            "land": 3,
+            "sea": 2
         }
 
         # Get the speed based on the unit type
