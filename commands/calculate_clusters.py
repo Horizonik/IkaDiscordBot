@@ -4,7 +4,7 @@ import discord
 
 from utils.types import BaseCommand, CityInfo, ClusterInfo
 from utils.utils import (
-    fetch_data,
+    fetch_cities_data,
     count_cities_per_island,
     generate_cluster_name
 )
@@ -14,10 +14,9 @@ class CalculateClusters(BaseCommand):
 
     def __init__(self, ctx: discord.Interaction, params: dict):
         super().__init__(ctx, params)
-        self.command_params = params
 
     async def command_logic(self):
-        cities_data = fetch_data(f"state=active&search=ally&allies[1]={self.command_params['alliance_name']}")
+        cities_data = fetch_cities_data(f"state=active&search=ally&allies[1]={self.command_params['alliance_name']}")
         if not cities_data:
             raise ValueError(f"alliance '{self.command_params['alliance_name']}' doesn't exist or has no data!")
 

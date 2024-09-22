@@ -7,7 +7,6 @@ class CalculateTravelTime(BaseCommand):
 
     def __init__(self, ctx: discord.Interaction, params: dict):
         super().__init__(ctx, params)
-        self.command_params = params
 
     async def command_logic(self):
         unit_type = self.command_params['unit_type']

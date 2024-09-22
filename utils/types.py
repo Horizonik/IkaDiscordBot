@@ -1,3 +1,4 @@
+import traceback
 from enum import Enum
 
 import datetime
@@ -31,9 +32,11 @@ class BaseCommand:
             await self.command_logic()  # Call the logic defined in subclasses
 
         except Exception as e:
+            stack_trace = traceback.format_exc()  # Capture the stack trace
+            print(f"{datetime.datetime.now()} | An error occurred while executing command '{self.ctx.command.name}': {str(e)}\n{stack_trace}")
             embed = discord.Embed(
                 title="Error",
-                description=f"An error occurred: {str(e)}",
+                description=f"An error occurred: {str(e)}. If this issue persists, please yell at my creator.",
                 color=discord.Color.red()
             )
             await self.ctx.response.send_message(embed=embed)
@@ -46,7 +49,7 @@ class BaseCommand:
         raise NotImplementedError("Subclasses must implement command_logic method.")
 
 
-class IslandTypes(Enum):
+class ResourceTypes(Enum):
     """Converts the numeric value from the 'trade-good' var into the string type of the island."""
     VINE = 1
     MARBLE = 2
@@ -62,7 +65,7 @@ class IslandTypes(Enum):
         for island in cls:
             if island.value == value:
                 return str(island)
-        raise ValueError(f"No IslandType found for value: {value}")
+        raise ValueError(f"No ResourceType found for value: {value}")
 
 
 class WonderTypes(Enum):
@@ -94,13 +97,14 @@ class CityInfo:
     y: int
 
     tradegood: int  # the ID of the resource of the island
-    tradegood_type: str  # the str name of the resource of the island
-    island_wood: int  # the level of the island's wood mine
-    island_tradegood: int  # the level of the island's resource mine
+    resource_type: str  # the str name of the resource of the island
+    wood_level: int  # the level of the island's wood mine
+    resource_level: int  # the level of the island's resource mine
+    island_name: str
 
     wonder: int  # the ID of the wonder of the island
     wonder_type: str  # the str name of the wonder of the island
-    island_wonder: int  # the level of the island's wonder
+    wonder_level: int  # the level of the island's wonder
 
     city_level: int
     city_name: str
@@ -115,7 +119,7 @@ class CityInfo:
                 setattr(self, attr, data[attr])
 
         # Convert trade-good ID to a string identification of the trade-good
-        setattr(self, 'tradegood_type', IslandTypes.from_value(data['tradegood']))
+        setattr(self, 'resource_type', ResourceTypes.from_value(data['tradegood']))
 
         # Convert wonder ID to a string identification of the wonder
         setattr(self, 'wonder_type', WonderTypes.from_value(data['wonder']))
@@ -123,11 +127,16 @@ class CityInfo:
         # Put x,y coords into a tuple for ease of use later on
         setattr(self, 'coords', (data['x'], data['y']))
 
+        # Change names from the Ika-logs names to better ones
+        self.resource_level = data['island_tradegood'] if 'island_tradegood' in data else data['resource_level']
+        self.wonder_level = data['island_wonder'] if 'island_wonder' in data else data['wonder_level']
+        self.wood_level = data['island_wood'] if 'island_wonder' in data else data['wood_level']
+
     def __repr__(self):
         return (
             f"<CityInfo(name={self.player_name}, "
             f"coords={self.coords}, "
-            f"tradegood={self.tradegood_type}, "
+            f"tradegood={self.resource_type}, "
             f"score={self.player_score}, "
             f"level={self.city_level})>"
         )
@@ -135,27 +144,38 @@ class CityInfo:
 
 class IslandInfo:
     coords: tuple[int, int]
+    name: str
+    tier: str
     x: int
     y: int
 
-    resource_type: IslandTypes
-    resource_level: int
+    cities: list[CityInfo]
+
     wood_level: int
+
+    resource_type: str
+    resource_level: int
+
+    wonder_type: str
     wonder_level: int
 
-    def __init__(self, data: dict):
+    def __init__(self, data: dict, cities: list[CityInfo] = None):
         # Automatically grab class annotations (aka attributes)
         for attr, attr_type in self.__annotations__.items():
             if attr in data:
                 setattr(self, attr, data[attr])
 
+        if cities:
+            self.cities = cities
+
+        self.name = data['island_name'] if 'island_name' in data else data['name']
+
     def __repr__(self):
         return (
-            f"<IslandInfo(coords={self.coords}, "
-            f"resource_type={self.resource_type}, "
-            f"resource_level={self.resource_level}, "
-            f"wood_level={self.wood_level}, "
-            f"wonder_level={self.wonder_level})>"
+            f"<IslandInfo=[{self.coords}], "
+            f"WONDER={self.wonder_type} [{self.wonder_level}], "
+            f"RES={self.resource_type} [{self.resource_level}], "
+            f"WOOD=[{self.wood_level}]>"
         )
 
 

@@ -1,5 +1,14 @@
-# This file holds all the parameters descriptions for every command.
-# These descriptions are imported into bot.py for use with discord.py
+import os
+
+from utils.types import WonderTypes
+
+GOOD_WONDERS = [WonderTypes.POSEIDON, WonderTypes.FORGE]
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # Project root
+ISLAND_RANKINGS_FILE_LOCATION = os.path.join(BASE_DIR, 'data', 'island_rankings.json')
+
+###
+# Parameters descriptions for every command. These are imported into bot.py for use with discord.py
+###
 
 CALCULATE_CLUSTERS_DESCRIPTION = {
     "alliance_name": "Name of the alliance to calculate clusters for",
@@ -28,4 +37,10 @@ TRAVEL_TIME_DESCRIPTION = {
 CLOSEST_CITY_TO_TARGET_DESCRIPTION = {
     "player_name": "The name of the player",
     "coords": "The target location to which we will compare city distances of the selected player"
+}
+
+LIST_BEST_ISLANDS_DESCRIPTION = {
+    "resource_type": "Filter for islands that only contain this specific resource",
+    "miracle_type": "Filter for islands that only contain this specific miracle",
+    "no_full_islands": "Do you want to see full islands in the results? Default true.",
 }

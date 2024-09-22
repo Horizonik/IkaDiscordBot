@@ -1,12 +1,15 @@
-import json
+import copy
 import math
 import os
 import random
 from collections import defaultdict
-from typing import Any
+from typing import Any, Optional
 import discord
 import requests
-from .types import CityInfo, IslandInfo, ClusterInfo
+
+from .constants import GOOD_WONDERS, BASE_DIR
+from .types import CityInfo, IslandInfo, ClusterInfo, ResourceTypes, WonderTypes
+import json
 
 # Configuration
 DATA_FOLDER = '../data/'
@@ -28,8 +31,8 @@ def validate_alliance_name(alliance_name: str):
         raise ValueError("Alliance name not found in config.")
 
 
-def fetch_data(query: str) -> list[CityInfo]:
-    """Fetch data from the ikalogs site"""
+def fetch_cities_data(query: str) -> list[CityInfo]:
+    """Fetch data from the Ika-logs site"""
 
     params = {
         'report': "User_WorldFind",
@@ -47,8 +50,6 @@ def fetch_data(query: str) -> list[CityInfo]:
     else:
         raise ValueError("Error! Page did not return any JSON data!")
 
-
-# 'https://ikalogs.ru/common/report/index/?report=User_WorldFind&query=server%3D2%26world%3D57%26state%3D%26search%3Dcity%26nick%3DGemmy%26ally%3DNone%26limit%3D5000&order=asc&sort=nick&start=0&limit=5000'
 
 def convert_data_to_markdown(parsed_city_clusters: list[ClusterInfo]) -> str:
     data_as_markdown = "# City Clusters:\n"
@@ -75,33 +76,6 @@ def count_cities_per_island(cities_data: list[CityInfo]) -> dict:
         city_counts[city.coords] += 1
 
     return dict(city_counts)
-
-
-def get_islands_info(cities_data: list[CityInfo]) -> list[IslandInfo]:
-    """Goes over the scraped cities' data, extracts information relating to the island"""
-
-    island_info_dict = {}
-
-    for city in cities_data:
-        island_coords = city.coords  # Using coords from CityInfo
-        if island_coords not in island_info_dict:
-            # Initialize a new IslandInfo entry if it doesn't exist
-            island_info_dict[island_coords] = {
-                'resource_type': city.tradegood_type,
-                'resource_level': city.island_tradegood,
-                'wood_level': city.island_wood,
-                'wonder_level': city.island_wonder,
-                'x': island_coords[0],
-                'y': island_coords[1],
-                'coords': city.coords,
-            }
-
-    # Create IslandInfo instances from the dictionary
-    island_info_list = [
-        IslandInfo(data) for data in island_info_dict.values()
-    ]
-
-    return island_info_list
 
 
 def convert_data_to_embed(parsed_city_clusters: list[ClusterInfo]) -> discord.Embed:
@@ -144,17 +118,137 @@ def convert_data_to_embed(parsed_city_clusters: list[ClusterInfo]) -> discord.Em
 def generate_cluster_name() -> str:
     prefixes = [
         "Aeg", "Del", "Ere", "Heli", "Kalo", "Nis", "Olym", "Thal", "Xan", "Zef",
+        "Thes", "Elys", "Hel", "Kri", "Phae", "Ly", "Axi", "Nyx", "Zephy", "Chal",
     ]
+
     suffixes = [
         "os", "a", "on", "us", "ia", "ion", "e", "aia", "ikos", "opolis",
+        "is", "ae", "iax", "eia", "icus", "osios", "thys", "umos", "iaxis", "eos",
     ]
 
     return f"{random.choice(prefixes)}{random.choice(suffixes)}"
 
 
-def get_closest_city_to_target(city_coords: tuple, target_coords: tuple):
+def get_distance_from_target(city_coords: tuple, target_coords: tuple):
     """Calculates which city is the closest to the target location using the euclidean distance formula"""
     x1, y1 = city_coords
     x2, y2 = target_coords
 
     return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+
+
+def save_islands_data_to_file(islands_data: list[IslandInfo], filename: str = "islands_data.json"):
+    # Convert IslandInfo objects into dictionaries for JSON serialization
+    for island in islands_data:
+        try:
+            island.cities = [city.__dict__ for city in island.cities]
+        except AttributeError as e:
+            print(f"Error processing island {island.name} {island.coords}: {e}")
+            island.cities = []  # Handle the error by resetting or logging
+
+    data = [island.__dict__ for island in islands_data]
+    with open(filename, 'w') as file:
+        json.dump(data, file, indent=4)
+
+
+def load_islands_data_from_file(filename: str = "islands_data.json") -> Optional[list[IslandInfo]]:
+    try:
+        with open(filename, 'r') as file:
+            data = json.load(file)
+
+        # Convert dictionaries back into IslandInfo objects
+        islands = []
+        for island_data in data:
+            # Assuming the city data needs to be converted back to CityInfo objects
+            cities = [CityInfo(city_data) for city_data in island_data.pop('cities', [])]
+            island = IslandInfo(island_data, cities)
+            islands.append(island)
+
+        return islands
+    except FileNotFoundError as e:
+        print(f"ERROR: {e}")
+        return None
+
+
+def create_island_info(cities: list[CityInfo]) -> IslandInfo:
+    """
+    Create a new IslandInfo object from a list of CityInfo objects.
+    Assumes that all cities belong to the same island.
+
+    Args:
+        cities (list[CityInfo]): A list of CityInfo objects representing cities on the island.
+
+    Returns:
+        IslandInfo: A new IslandInfo object with data aggregated from the cities.
+    """
+
+    city_as_dict = cities[0].__dict__  # Grab a single city to extract data about the island from it
+    return IslandInfo(city_as_dict, cities)
+
+
+def fetch_islands_data() -> list[IslandInfo]:
+    """Fetches every island's data from across the map and saves it into a file"""
+    islands_data = []
+
+    for x_coords in range(20, 80):
+        for y_coords in range(20, 80):
+            cities_data = fetch_cities_data(f"state=&search=city&x={x_coords}&y={y_coords}")
+            if cities_data:
+                island_data = create_island_info(cities_data)
+                print(f"Fetched {len(island_data.cities)} cities for island {island_data.name} {island_data.coords}.")
+                islands_data.append(island_data)
+            else:
+                print(f"The island ({x_coords}, {y_coords}) has 0 residents. Continuing..")
+
+        # Save existing data after finishing each x_coord
+        if islands_data:
+            save_islands_data_to_file(copy.deepcopy(islands_data), os.path.join(BASE_DIR, 'data', f'backup_data_for_x_iter_{x_coords}.json'))
+            print(f">> Saved the data we collected up to now in a file called backup_data_for_x_iter_{x_coords}")
+
+    return islands_data
+
+
+def rank_islands(islands_data: list[IslandInfo], resource_type: ResourceTypes = None, miracle_type: WonderTypes = None, no_full_islands: bool = False) -> list[tuple[IslandInfo, int]]:
+    # Filter islands based on the input criteria
+    if resource_type:
+        islands_data = [island for island in islands_data if island.resource_type == str(resource_type)]
+
+    if miracle_type:
+        islands_data = [island for island in islands_data if island.wonder_type == str(miracle_type)]
+
+    if no_full_islands:
+        islands_data = [island for island in islands_data if len(island.cities) < 16]
+
+    # Calculate ranking score for each island
+    def calculate_rank(island: IslandInfo) -> int:
+        rank_score = 0
+        free_spots_weight = 5  # Score weight per free spot
+
+        # Prioritize islands with free spots (max 16 cities per island)
+        free_spots = 16 - len(island.cities) if hasattr(island, 'cities') else 16
+        rank_score += free_spots * free_spots_weight
+
+        # Add wood, resource, and wonder levels to the score
+        rank_score += island.wood_level * 5
+        rank_score += island.resource_level * 6
+        rank_score += island.wonder_level * 2
+
+        # Extra boost if the wonder is considered "good"
+        if island.wonder_type in map(str, GOOD_WONDERS):
+            rank_score += 150
+
+        # Rank the island higher the closer it is to the map's center
+        distance_from_center = get_distance_from_target(island.coords, (50, 50))
+        rank_score -= int(distance_from_center)
+
+        return rank_score
+
+    # List of islands with their rank scores
+    ranked_islands = [(island, calculate_rank(island)) for island in islands_data]
+    ranked_islands.sort(key=lambda ranked_island: ranked_island[1], reverse=True)  # ranked_island[1] is the score of the island
+
+    return ranked_islands
+
+
+def truncate_string(raw_string: str, char_limit: int):
+    return raw_string if len(raw_string) <= char_limit else raw_string[:char_limit - 2] + '..'

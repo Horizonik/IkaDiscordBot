@@ -1,20 +1,17 @@
-from itertools import product
+import json
 
 import discord
+from table2ascii import table2ascii as t2a, PresetStyle, Alignment
 
-from utils.types import BaseCommand, CityInfo, ClusterInfo
-from utils.utils import (
-    fetch_data,
-    count_cities_per_island,
-    convert_data_to_embed
-)
+from utils.constants import ISLAND_RANKINGS_FILE_LOCATION
+from utils.types import BaseCommand, CityInfo
+from utils.utils import fetch_cities_data, truncate_string
 
 
 class FindPlayer(BaseCommand):
 
     def __init__(self, ctx: discord.Interaction, params: dict):
         super().__init__(ctx, params)
-        self.command_params = params
 
     async def command_logic(self):
         alliance_name = self.command_params['alliance_name']
@@ -23,7 +20,7 @@ class FindPlayer(BaseCommand):
         if len(player_name) < 3 or len(player_name) > 15:
             raise ValueError(f"a player that goes by the name of '{player_name}' doesn't exist!")
 
-        cities_data = fetch_data(
+        cities_data = fetch_cities_data(
             f"state=&search=city&nick={player_name}{f'&ally={alliance_name}' if alliance_name else ''}"
         )
 
@@ -36,30 +33,58 @@ class FindPlayer(BaseCommand):
         embed = self.create_city_table_embed(cities_data)
         await self.ctx.response.send_message(embed=embed)
 
+    def load_island_tiers(self, filepath: str):
+        """Loads island tier data from a JSON file."""
+        with open(filepath, 'r') as file:
+            return json.load(file)
+
+    def get_island_tier(self, coords: tuple, islands_data: list[dict]):
+        """Finds the tier of the island based on city coordinates."""
+        for island in islands_data:
+            if 'tier' in island:
+                if island['coords'][0] == coords[0] and island['coords'][1] == coords[1]:
+                    return island['tier']
+            else:
+                return 'N/A'
+
     def create_city_table_embed(self, cities_data: list[CityInfo]) -> discord.Embed:
-        embed = discord.Embed(title=f"{self.command_params['player_name']}'s City Information",
-                              color=discord.Color.orange())
+        # Load island tier data from the JSON file
+        islands_data = self.load_island_tiers(ISLAND_RANKINGS_FILE_LOCATION)
 
-        # Create the header row
-        header = f"{'Coords':<10} {'City Name':<15} {'Resource':<13} {'Wonder':<9}\n"
-        separator = '-' * 56 + '\n'
-        table_rows = ""
+        embed = discord.Embed(
+            title=f"{str(self.command_params['player_name']).capitalize()}'s City Information",
+            color=discord.Color.blue()
+        )
 
+        # Prepare data for the table
+        table_data = []
         for city in cities_data:
-            # Truncate city name if it's longer than 20 characters
-            city_name = city.city_name if len(city.city_name) <= 13 else city.city_name[:11] + '..'
+            # Truncate string that might exceed the embed length limit
+            city_name = truncate_string(city.city_name, 7)
+            wonder_type = truncate_string(city.wonder_type, 6)
+            resource_type = truncate_string(city.resource_type, 6)
 
-            table_rows += (
-                f"{str(city.coords):<10} "  # Convert tuple to string
-                f"[{city.city_level:<2}] {city_name:<13} "
-                f"[{city.island_tradegood:<2}] {city.tradegood_type.capitalize():<7} "
-                f"[{city.island_wonder:<1}] {city.wonder_type.capitalize():<7} \n"
-            )
+            # Get the tier of the island
+            island_tier = self.get_island_tier(city.coords, islands_data)
 
-        # Combine header, separator, and rows
-        table = header + separator + table_rows
+            # Append row data
+            table_data.append([
+                f"{city.x}:{city.y}",  # Convert tuple to string
+                f"[{city.city_level}]{city_name}",
+                f"[{city.resource_level}]{resource_type.capitalize()}",
+                f"[{city.wonder_level}]{wonder_type.capitalize()}",
+                island_tier  # Add island tier to the table
+            ])
 
-        # Add the table to the embed as a code block
-        embed.add_field(name="Data", value=f"```\n{table}```", inline=False)
+        # Create table with table2ascii
+        table_content = t2a(
+            header=["Coords", "City Name", "Resource", "Miracle", "Tier"],
+            body=table_data,
+            style=PresetStyle.thick_compact,
+            alignments=[Alignment.CENTER, Alignment.LEFT, Alignment.LEFT, Alignment.LEFT, Alignment.CENTER]
+        )
+
+        # Add the table content to the embed
+        embed.add_field(name=f"{len(cities_data)} cities found", value=f"```\n{table_content}\n```", inline=False)
 
         return embed

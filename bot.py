@@ -3,14 +3,17 @@ import discord
 from discord import app_commands
 from commands.calculate_clusters import CalculateClusters
 from commands.closest_city_to_target import ClosestCityToTarget
+from commands.list_best_islands import ListBestIslands
 from commands.travel_time import CalculateTravelTime
 from commands.find_player import FindPlayer
-from commands.command_descriptions import (
+from utils.constants import (
     CALCULATE_CLUSTERS_DESCRIPTION,
     FIND_PLAYER_DESCRIPTION,
-    TRAVEL_TIME_DESCRIPTION, CLOSEST_CITY_TO_TARGET_DESCRIPTION
+    TRAVEL_TIME_DESCRIPTION,
+    CLOSEST_CITY_TO_TARGET_DESCRIPTION,
+    LIST_BEST_ISLANDS_DESCRIPTION
 )
-from utils.types import DiscordBotClient
+from utils.types import DiscordBotClient, WonderTypes, ResourceTypes
 
 intents = discord.Intents.default()
 intents.messages = True
@@ -22,6 +25,7 @@ BOT_TOKEN = os.getenv('BOT_TOKEN')
 
 @client.event
 async def on_ready():
+    await client.tree.sync()  # Force sync all slash commands
     print(f'Logged in as {client.user} (ID: {client.user.id})')
     print('------')
 
@@ -86,6 +90,17 @@ async def closest_city_to_target(interaction: discord.Interaction, player_name: 
     await run_command(interaction, ClosestCityToTarget, {
         "player_name": player_name,
         "coords": coords
+    })
+
+
+@client.tree.command()
+@app_commands.describe(**LIST_BEST_ISLANDS_DESCRIPTION)
+async def list_best_islands(interaction: discord.Interaction, resource_type: ResourceTypes, miracle_type: WonderTypes, no_full_islands: bool = True):
+    """Checks which of the player's city is the closest to the target island"""
+    await run_command(interaction, ListBestIslands, {
+        "resource_type": resource_type,
+        "miracle_type": miracle_type,
+        "no_full_islands": no_full_islands
     })
 
 
