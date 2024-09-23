@@ -1,9 +1,10 @@
-from table2ascii import table2ascii as t2a, PresetStyle, Alignment
 import discord
+from table2ascii import table2ascii as t2a, PresetStyle, Alignment
 
 from utils.constants import ISLAND_RANKINGS_FILE_LOCATION
+from utils.data_utils import load_islands_data_from_file
+from utils.general_utils import rank_islands, truncate_string, create_embed
 from utils.types import BaseCommand, IslandInfo
-from utils.utils import load_islands_data_from_file, rank_islands, truncate_string
 
 
 class ListBestIslands(BaseCommand):
@@ -25,10 +26,13 @@ class ListBestIslands(BaseCommand):
         """Generates a table that shows the best islands and their ranking"""
         best_islands = islands_data[:10]  # Get the top 10 islands
 
-        embed = discord.Embed(
-            title=f"Top {len(best_islands)} out of {len(islands_data)} islands",
-            description=f"All islands have the {str(self.command_params['miracle_type']).capitalize()} miracle and {str(self.command_params['resource_type']).capitalize()} resource.",
-            color=discord.Color.blue()
+        embed = create_embed(
+            title=f"Top {len(best_islands)} out of {len(islands_data)} total matching islands",
+            description=(
+                f"Island filters: {str(self.command_params['miracle_type']).capitalize()} miracle "
+                f"and {str(self.command_params['resource_type']).capitalize()} resource, "
+                f"full islands {'not ' if self.command_params['no_full_islands'] else ''}allowed."
+            )
         )
 
         # Prepare data for the table
@@ -44,7 +48,6 @@ class ListBestIslands(BaseCommand):
             # Append row data
             table_data.append([coords, open_slots, wood_level, resource_info, wonder_info, tier])
 
-        # Create table with table2ascii
         table_content = t2a(
             header=["Coords", "Spots", "Wood", "Resource", "Wonder", "Tier"],
             body=table_data,
@@ -52,11 +55,8 @@ class ListBestIslands(BaseCommand):
             alignments=[Alignment.CENTER, Alignment.LEFT, Alignment.LEFT, Alignment.CENTER, Alignment.CENTER, Alignment.CENTER]
         )
 
-        # Add the table content to the embed
         embed.add_field(name="", value=f"```\n{table_content}\n```", inline=False)
-
-        # Footer and additional info
-        embed.set_footer(text="Rankings are based on mine levels, wonders, available spots and distance from center of the map.")
+        embed.add_field(name="", value="Rankings are based on mine levels, wonders, available spots and distance from center of the map.", inline=False)
 
         return embed
 

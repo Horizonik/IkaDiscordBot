@@ -1,6 +1,7 @@
 from commands.list_best_islands import assign_rank_tiers
 from utils.constants import ISLAND_RANKINGS_FILE_LOCATION
-from utils.utils import fetch_islands_data, rank_islands, save_islands_data_to_file
+from utils.data_utils import fetch_islands_data, save_islands_data_to_file
+from utils.general_utils import rank_islands
 
 
 def fetch_rank_all_islands_and_save_to_file():

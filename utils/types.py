@@ -1,7 +1,7 @@
+import datetime
 import traceback
 from enum import Enum
 
-import datetime
 import discord
 from discord import app_commands
 
@@ -49,7 +49,7 @@ class BaseCommand:
         raise NotImplementedError("Subclasses must implement command_logic method.")
 
 
-class ResourceTypes(Enum):
+class ResourceType(Enum):
     """Converts the numeric value from the 'trade-good' var into the string type of the island."""
     VINE = 1
     MARBLE = 2
@@ -68,11 +68,11 @@ class ResourceTypes(Enum):
         raise ValueError(f"No ResourceType found for value: {value}")
 
 
-class WonderTypes(Enum):
+class WonderType(Enum):
     """Converts the numeric value from the 'trade-good' var into the string type of the island."""
     FORGE = 1
     HADES = 2
-    DEMETERS = 3
+    DEMETER = 3
     ATHENA = 4
     HERMES = 5
     ARES = 6
@@ -89,6 +89,34 @@ class WonderTypes(Enum):
             if miracle.value == value:
                 return str(miracle)
         raise ValueError(f"No WonderType found for value: {value}")
+
+
+class UnitType(Enum):
+    GYROCOPTER = "Gyrocopter"
+    DOCTOR = "Doctor"
+    ARCHER = "Archer"
+    HOPLITE = "Hoplite"
+    SLINGER = "Slinger"
+    SPEARMAN = "Spearman"
+    SULPHUR_CARABINEER = "Sulphur Carabineer"
+    SWORDSMAN = "Swordsman"
+    CATAPULT = "Catapult"
+    COOK = "Cook"
+    MORTAR = "Mortar"
+    RAM = "Ram"
+    STEAM_GIANT = "Steam Giant"
+    BALLOON_BOMBARDIER = "Balloon Bombardier"
+    STEAM_RAM = "Steam Ram"
+    FIRE_SHIP = "Fire Ship"
+    RAM_SHIP = "Ram Ship"
+    BALLISTA_SHIP = "Ballista Ship"
+    CATAPULT_SHIP = "Catapult Ship"
+    MORTAR_SHIP = "Mortar Ship"
+    ROCKET_SHIP = "Rocket Ship"
+    SUBMARINE = "Submarine"
+    BALLOON_SHIP = "Balloon Ship"
+    PADDLE_SPEEDBOAT = "Paddle Speedboat"
+    TENDER = "Tender"
 
 
 class CityInfo:
@@ -119,10 +147,10 @@ class CityInfo:
                 setattr(self, attr, data[attr])
 
         # Convert trade-good ID to a string identification of the trade-good
-        setattr(self, 'resource_type', ResourceTypes.from_value(data['tradegood']))
+        setattr(self, 'resource_type', ResourceType.from_value(data['tradegood']))
 
         # Convert wonder ID to a string identification of the wonder
-        setattr(self, 'wonder_type', WonderTypes.from_value(data['wonder']))
+        setattr(self, 'wonder_type', WonderType.from_value(data['wonder']))
 
         # Put x,y coords into a tuple for ease of use later on
         setattr(self, 'coords', (data['x'], data['y']))
@@ -201,10 +229,31 @@ class ClusterInfo:
 
 
 class DiscordBotClient(discord.Client):
-    def __init__(self, *, intents: discord.Intents):
+    def __init__(self):
+        intents = discord.Intents.default()
+        intents.messages = True
+        intents.message_content = True
         super().__init__(intents=intents)
+
         self.tree = app_commands.CommandTree(self)
 
     async def setup_hook(self):
         # Sync commands globally to all servers the bot is in
         await self.tree.sync()
+
+    async def on_ready(self):
+        await self.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Ikariam"))
+        print(
+            f"{datetime.datetime.now()} | Logged in as {self.user} (ID: {self.user.id}) \n"
+            "------"
+        )
+
+    async def on_disconnect(self):
+        print(
+            f"{datetime.datetime.now()} | Disconnected from Discord, or a connection attempt to Discord has failed, \n"
+            "this could happen either through the internet being disconnected or explicit calls being too close. \n"
+            "------"
+        )
+
+    async def on_connect(self):
+        print(f"{datetime.datetime.now()} | Successfully connected to Discord Services")

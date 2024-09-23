@@ -1,5 +1,9 @@
 import math
+
 import discord
+
+from utils.constants import ship_units, unit_speeds
+from utils.general_utils import create_embed
 from utils.types import BaseCommand
 
 
@@ -9,51 +13,47 @@ class CalculateTravelTime(BaseCommand):
         super().__init__(ctx, params)
 
     async def command_logic(self):
-        unit_type = self.command_params['unit_type']
-        using_poseidon = self.command_params['using_poseidon']
+        unit_type = self.command_params.get('unit_type')
+        using_poseidon = self.command_params.get('using_poseidon', False)
+        using_oligarchy = self.command_params.get('using_oligarchy', False)
+        sea_chart_level = self.command_params.get('sea_chart_level', 0)
 
         # Validate and parse start coordinates
         try:
             start_x, start_y = map(int, self.command_params['start_coords'].split(':'))
             dest_x, dest_y = map(int, self.command_params['destination_coords'].split(':'))
-
         except ValueError:
-            await self.ctx.response.send_message("Invalid start coordinates format! Please use 'XX:YY'.")
+            await self.ctx.response.send_message("Invalid coordinates format! Use 'XX:YY'.")
             return
 
-        start_coords = (start_x, start_y)
-        destination_coords = (dest_x, dest_y)
+        # Calculate Euclidean distance between the islands
+        distance = math.sqrt((dest_x - start_x) ** 2 + (dest_y - start_y) ** 2) or 0.5  # 0.5 if same island
 
-        # Speeds for land and sea units
-        speeds = {
-            "land": 3,
-            "sea": 2
-        }
+        # Base speed adjustments
+        base_speed = unit_speeds.get(unit_type)
 
-        # Get the speed based on the unit type
-        speed = speeds.get(unit_type.lower())
-        if speed is None:
-            await self.ctx.response.send_message("Invalid unit type! Please use 'land' or 'sea'.")
-            return
+        # Apply Oligarchy bonus (1.10x speed if Oligarchy is active)
+        if using_oligarchy:
+            base_speed *= 1.1
 
-        # Calculate the distance
-        distance = math.sqrt(
-            (destination_coords[0] - start_coords[0]) ** 2 +
-            (destination_coords[1] - start_coords[1]) ** 2
+        # Apply Sea Chart Archive bonus (only for ships, level increases speed)
+        if unit_type in ship_units:
+            base_speed *= (1 + sea_chart_level / 100)
+
+        # Apply Poseidon Miracle bonus
+        if using_poseidon:
+            base_speed *= 1.5
+
+        # Time to travel in minutes = 1200 / speed * distance
+        travel_time_minutes = (1200 / base_speed) * distance
+
+        # Convert minutes to hours and minutes
+        hours = int(travel_time_minutes // 60)
+        minutes = int(travel_time_minutes % 60)
+
+        await self.ctx.response.send_message(
+            embed=create_embed(
+                f"{unit_type.name.replace('_', ' ').title()} from {start_x}:{start_y} to {dest_x}:{dest_y}.",
+                f"Travel time is approximately {f'{hours} hours' if hours > 0 else ''}{f' and {minutes} minutes' if minutes > 0 else ''}."
+            )
         )
-
-        # Calculate estimated travel time in hours
-        estimated_time_in_hrs = distance / speed
-        estimated_time_in_hrs = estimated_time_in_hrs / 2 if using_poseidon else estimated_time_in_hrs
-
-        # Format the result
-        hours = int(estimated_time_in_hrs)
-        minutes = int((estimated_time_in_hrs - hours) * 60)
-
-        response_message = (
-            f"It will take approximately {f'{hours} hours and ' if hours else ''}"
-            f"{minutes} minutes for your {unit_type} units to reach from "
-            f"{':'.join(map(str, start_coords))} to {':'.join(map(str, destination_coords))}."
-        )
-
-        await self.ctx.response.send_message(response_message)

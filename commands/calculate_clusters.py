@@ -2,12 +2,9 @@ from itertools import product
 
 import discord
 
-from utils.types import BaseCommand, CityInfo, ClusterInfo
-from utils.utils import (
-    fetch_cities_data,
-    count_cities_per_island,
-    generate_cluster_name
-)
+from utils.data_utils import fetch_cities_data
+from utils.general_utils import count_cities_per_island, generate_cluster_name, create_embed
+from utils.types import BaseCommand, CityInfo
 
 
 class CalculateClusters(BaseCommand):
@@ -27,16 +24,14 @@ class CalculateClusters(BaseCommand):
         )
 
         city_clusters = self.cluster_cities(filtered_cities_data)
-        # TODO - make ClusterInfo class work with the final formatting so that we can get more data about the cities in the clusters.
-        # clusters_as_objects = self.convert_raw_clusters_to_objects(city_clusters, city_counts)
-        # embed = convert_data_to_embed(clusters_as_objects)
 
         clusters_as_str = self.clusters_to_str(city_clusters, city_counts)
-        embed = self.get_result_as_embed(clusters_as_str)
+        embed = self.convert_to_embed(clusters_as_str)
         await self.ctx.response.send_message(embed=embed)
 
-    def get_result_as_embed(self, clusters_as_str: list[str]) -> discord.Embed:
-        embed = discord.Embed(title="City Clusters", color=discord.Color.blue())
+    @staticmethod
+    def convert_to_embed(clusters_as_str: list[str]) -> discord.Embed:
+        embed = create_embed(title="City Clusters", color=discord.Color.blue())
 
         for cluster in clusters_as_str:
             cluster_lines = cluster.split('\n')
@@ -109,27 +104,3 @@ class CalculateClusters(BaseCommand):
     def filter_data_by_min_amount_of_cities_on_island(self, cities_data: list[CityInfo], city_counts: dict) -> list:
         return [city for city in cities_data if
                 city_counts[city.coords] >= self.command_params['min_cities_per_island']]
-
-    def filter_clusters_by_city_count(self, clusters: list, city_counts: dict) -> list:
-        filtered_clusters = []
-        for cluster in clusters:
-            if any(city_counts.get(city.coords, 0) >= self.command_params['min_cities_per_cluster'] for city in
-                   cluster):
-                filtered_clusters.append(cluster)
-        return filtered_clusters
-
-    def convert_raw_clusters_to_objects(self, clusters: list[list[CityInfo]], city_counts: dict) -> list[ClusterInfo]:
-        cluster_infos = []
-        cluster_index = 1
-
-        for cluster_cities in clusters:
-            cluster_name = f"{generate_cluster_name()} [#{chr(65 + cluster_index - 1)}]"
-            total_cities = sum(city_counts.get(city.coords, 0) for city in cluster_cities)
-
-            if total_cities < self.command_params['min_cities_per_cluster']:
-                continue
-
-            cluster_infos.append(ClusterInfo(cluster_name, -1, cluster_cities))
-            cluster_index += 1
-
-        return cluster_infos

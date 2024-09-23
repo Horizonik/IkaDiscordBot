@@ -4,8 +4,9 @@ import discord
 from table2ascii import table2ascii as t2a, PresetStyle, Alignment
 
 from utils.constants import ISLAND_RANKINGS_FILE_LOCATION
+from utils.data_utils import fetch_cities_data
+from utils.general_utils import truncate_string, create_embed
 from utils.types import BaseCommand, CityInfo
-from utils.utils import fetch_cities_data, truncate_string
 
 
 class FindPlayer(BaseCommand):
@@ -21,11 +22,9 @@ class FindPlayer(BaseCommand):
             raise ValueError(f"a player that goes by the name of '{player_name}' doesn't exist!")
 
         cities_data = fetch_cities_data(
-            f"state=&search=city&nick={player_name}{f'&ally={alliance_name}' if alliance_name else ''}"
+            f"state=&search=city&nick={player_name}{f'&ally={alliance_name}' if alliance_name else ''}",
+            self.command_params['player_name']
         )
-
-        # Filter out any startsWith matches, only exact name matches will remain
-        cities_data = [city for city in cities_data if city.player_name.lower() == self.command_params['player_name']]
 
         # Sort cities by their coordinates
         cities_data.sort(key=lambda city: (city.coords[0], city.coords[1]))
@@ -33,12 +32,14 @@ class FindPlayer(BaseCommand):
         embed = self.create_city_table_embed(cities_data)
         await self.ctx.response.send_message(embed=embed)
 
-    def load_island_tiers(self, filepath: str):
+    @staticmethod
+    def load_island_tiers(filepath: str):
         """Loads island tier data from a JSON file."""
         with open(filepath, 'r') as file:
             return json.load(file)
 
-    def get_island_tier(self, coords: tuple, islands_data: list[dict]):
+    @staticmethod
+    def get_island_tier(coords: tuple, islands_data: list[dict]):
         """Finds the tier of the island based on city coordinates."""
         for island in islands_data:
             if 'tier' in island:
@@ -51,10 +52,7 @@ class FindPlayer(BaseCommand):
         # Load island tier data from the JSON file
         islands_data = self.load_island_tiers(ISLAND_RANKINGS_FILE_LOCATION)
 
-        embed = discord.Embed(
-            title=f"{str(self.command_params['player_name']).capitalize()}'s City Information",
-            color=discord.Color.blue()
-        )
+        embed = create_embed(title=f"{str(self.command_params['player_name']).capitalize()}'s City Information")
 
         # Prepare data for the table
         table_data = []

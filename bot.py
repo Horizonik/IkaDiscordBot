@@ -1,33 +1,21 @@
-import os
 import discord
 from discord import app_commands
+
 from commands.calculate_clusters import CalculateClusters
 from commands.closest_city_to_target import ClosestCityToTarget
+from commands.find_player import FindPlayer
 from commands.list_best_islands import ListBestIslands
 from commands.travel_time import CalculateTravelTime
-from commands.find_player import FindPlayer
 from utils.constants import (
     CALCULATE_CLUSTERS_DESCRIPTION,
     FIND_PLAYER_DESCRIPTION,
     TRAVEL_TIME_DESCRIPTION,
     CLOSEST_CITY_TO_TARGET_DESCRIPTION,
-    LIST_BEST_ISLANDS_DESCRIPTION
+    LIST_BEST_ISLANDS_DESCRIPTION, BOT_TOKEN
 )
-from utils.types import DiscordBotClient, WonderTypes, ResourceTypes
+from utils.types import DiscordBotClient, WonderType, ResourceType, UnitType
 
-intents = discord.Intents.default()
-intents.messages = True
-intents.message_content = True
-
-client = DiscordBotClient(intents=intents)
-BOT_TOKEN = os.getenv('BOT_TOKEN')
-
-
-@client.event
-async def on_ready():
-    await client.tree.sync()  # Force sync all slash commands
-    print(f'Logged in as {client.user} (ID: {client.user.id})')
-    print('------')
+client = DiscordBotClient()
 
 
 async def run_command(interaction, command_class, command_params: dict = None):
@@ -55,15 +43,6 @@ async def calculate_clusters(interaction: discord.Interaction, alliance_name: st
     })
 
 
-# TODO - Disabled until further notice. Need to generate the heatmap as an image that can be sent to discord.
-# @client.tree.command()
-# @app_commands.describe(**GENERATE_HEATMAP_DESCRIPTION)
-# async def generate_heatmap(interaction: discord.Interaction, alliance_name: str, min_cities_on_island: int):
-#     """Generates a heatmap based on the alliance and minimum cities"""
-#     await run_command(interaction, GenerateHeatmap,
-#                       {"alliance_name": alliance_name, "min_cities": min_cities_on_island})
-
-
 @client.tree.command()
 @app_commands.describe(**FIND_PLAYER_DESCRIPTION)
 async def find_player(interaction: discord.Interaction, player_name: str, alliance_name: str = None):
@@ -73,13 +52,18 @@ async def find_player(interaction: discord.Interaction, player_name: str, allian
 
 @client.tree.command()
 @app_commands.describe(**TRAVEL_TIME_DESCRIPTION)
-async def travel_time(interaction: discord.Interaction, unit_type: str, start_coords: str, destination_coords: str, using_poseidon: bool = False):
+async def travel_time(
+        interaction: discord.Interaction, unit_type: UnitType, start_coords: str, destination_coords: str,
+        using_poseidon: bool = False, using_oligarchy: bool = False, sea_chart_level: int = 0
+):
     """Calculates estimated travel time for units based on type and coordinates"""
     await run_command(interaction, CalculateTravelTime, {
         "unit_type": unit_type,
         "start_coords": start_coords,
         "destination_coords": destination_coords,
-        "using_poseidon": using_poseidon
+        "using_poseidon": using_poseidon,
+        "using_oligarchy": using_oligarchy,
+        "sea_chart_level": sea_chart_level,
     })
 
 
@@ -88,20 +72,29 @@ async def travel_time(interaction: discord.Interaction, unit_type: str, start_co
 async def closest_city_to_target(interaction: discord.Interaction, player_name: str, coords: str):
     """Checks which of the player's city is the closest to the target island"""
     await run_command(interaction, ClosestCityToTarget, {
-        "player_name": player_name,
+        "player_name": player_name.lower(),
         "coords": coords
     })
 
 
 @client.tree.command()
 @app_commands.describe(**LIST_BEST_ISLANDS_DESCRIPTION)
-async def list_best_islands(interaction: discord.Interaction, resource_type: ResourceTypes, miracle_type: WonderTypes, no_full_islands: bool = True):
+async def list_best_islands(interaction: discord.Interaction, resource_type: ResourceType, miracle_type: WonderType, no_full_islands: bool = True):
     """Checks which of the player's city is the closest to the target island"""
     await run_command(interaction, ListBestIslands, {
         "resource_type": resource_type,
         "miracle_type": miracle_type,
         "no_full_islands": no_full_islands
     })
+
+
+# TODO - Disabled until further notice. Need to generate the heatmap as an image that can be sent to discord.
+# @client.tree.command()
+# @app_commands.describe(**GENERATE_HEATMAP_DESCRIPTION)
+# async def generate_heatmap(interaction: discord.Interaction, alliance_name: str, min_cities_on_island: int):
+#     """Generates a heatmap based on the alliance and minimum cities"""
+#     await run_command(interaction, GenerateHeatmap,
+#                       {"alliance_name": alliance_name, "min_cities": min_cities_on_island})
 
 
 client.run(BOT_TOKEN)
