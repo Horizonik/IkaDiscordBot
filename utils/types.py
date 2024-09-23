@@ -11,12 +11,20 @@ class BaseCommand:
     ctx: discord.Interaction
     command_params: dict
     command_start_time: datetime.datetime
+    servers_settings: dict
+    guild_settings: dict
+    region_id: int
+    world_id: int
 
-    def __init__(self, ctx: discord.Interaction, command_params: dict):
+    def __init__(self, ctx: discord.Interaction, command_params: dict, server_settings: dict):
         # Gather basic information about queued command run
         self.ctx = ctx
         self.command_params = command_params
         self.command_start_time = datetime.datetime.now()
+        self.servers_settings = server_settings
+        self.guild_settings = server_settings[str(ctx.guild.id)]
+        self.region_id = self.guild_settings['region_id']
+        self.world_id = self.guild_settings['world_id']
 
     async def log_at_run_end(self):
         print(f"{datetime.datetime.now()} | Finished running the '{self.ctx.command.name}' command!")
@@ -228,6 +236,11 @@ class ClusterInfo:
         )
 
 
+class ConfigurableSetting(Enum):
+    REGION = "region"
+    WORLD = "world"
+
+
 class DiscordBotClient(discord.Client):
     def __init__(self):
         intents = discord.Intents.default()
@@ -257,3 +270,18 @@ class DiscordBotClient(discord.Client):
 
     async def on_connect(self):
         print(f"{datetime.datetime.now()} | Successfully connected to Discord Services")
+
+    async def on_guild_join(self, guild: discord.Guild):
+        # Prepare the greeting message
+        greeting_message = (
+            f"Hello, {guild.name}! 👋\n"
+            "I'm your friendly bot designed to assist your Ikariam endeavors. "
+            "I can help you calculate travel times, find players cities, and more!\n\n"
+            "To get started, please configure the settings so I know which world to fetch data for. "
+            "You can use the `/set_setting world <your_world_number>` command to set the world.\n"
+            "Feel free to ask me for help with any commands!"
+        )
+
+        # Send the message to the system channel if available
+        if guild.system_channel:
+            await guild.system_channel.send(greeting_message)

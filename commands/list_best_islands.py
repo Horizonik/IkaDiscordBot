@@ -1,7 +1,9 @@
+import os
+
 import discord
 from table2ascii import table2ascii as t2a, PresetStyle, Alignment
 
-from utils.constants import ISLAND_RANKINGS_FILE_LOCATION
+from utils.constants import ISLAND_RANKINGS_FILE_DIR
 from utils.data_utils import load_islands_data_from_file
 from utils.general_utils import rank_islands, truncate_string, create_embed
 from utils.types import BaseCommand, IslandInfo
@@ -9,13 +11,13 @@ from utils.types import BaseCommand, IslandInfo
 
 class ListBestIslands(BaseCommand):
 
-    def __init__(self, ctx: discord.Interaction, params: dict):
-        super().__init__(ctx, params)
+    def __init__(self, ctx: discord.Interaction, params: dict, server_settings: dict):
+        super().__init__(ctx, params, server_settings)
 
     async def command_logic(self):
-        ranked_islands_data = load_islands_data_from_file(ISLAND_RANKINGS_FILE_LOCATION)
+        ranked_islands_data = load_islands_data_from_file(os.path.join(ISLAND_RANKINGS_FILE_DIR, f'{str(self.region_id)}_{str(self.world_id)}.json'))
         if not ranked_islands_data:
-            raise ValueError("the island rankings db is empty, please try again later. If this issue persists please contact my creator.")
+            raise ValueError(f"island data is not yet available for the {str(self.guild_settings['region']).upper()} {str(self.guild_settings['world']).capitalize()} server. Sorry")
 
         ranked_islands = rank_islands(ranked_islands_data, self.command_params['resource_type'], self.command_params['miracle_type'], self.command_params['no_full_islands'])
 

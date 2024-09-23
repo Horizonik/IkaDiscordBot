@@ -23,7 +23,7 @@ def save_islands_data_to_file(islands_data: list[IslandInfo], filename: str = "i
         json.dump(data, file, indent=4)
 
 
-def load_islands_data_from_file(filename: str = "islands_data.json") -> Optional[list[IslandInfo]]:
+def load_islands_data_from_file(filename: str) -> Optional[list[IslandInfo]]:
     try:
         with open(filename, 'r') as file:
             data = json.load(file)
@@ -42,6 +42,14 @@ def load_islands_data_from_file(filename: str = "islands_data.json") -> Optional
         return None
 
 
+def load_json_file(settings_file_path: str):
+    try:
+        with open(settings_file_path, 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {}
+
+
 def create_island_info(cities: list[CityInfo]) -> IslandInfo:
     """
     Create a new IslandInfo object from a list of CityInfo objects.
@@ -58,13 +66,13 @@ def create_island_info(cities: list[CityInfo]) -> IslandInfo:
     return IslandInfo(city_as_dict, cities)
 
 
-def fetch_islands_data() -> list[IslandInfo]:
+def fetch_islands_data(world, region) -> list[IslandInfo]:
     """Fetches every island's data from across the map and saves it into a file"""
     islands_data = []
 
     for x_coords in range(20, 80):
         for y_coords in range(20, 80):
-            cities_data = fetch_cities_data(f"state=&search=city&x={x_coords}&y={y_coords}")
+            cities_data = fetch_cities_data(f"server={region}&world={world}&state=&search=city&x={x_coords}&y={y_coords}")
             if cities_data:
                 island_data = create_island_info(cities_data)
                 print(f"Fetched {len(island_data.cities)} cities for island {island_data.name} {island_data.coords}.")
@@ -91,7 +99,7 @@ def fetch_cities_data(query: str, player_name: str = None) -> list[CityInfo]:
 
     params = {
         'report': "User_WorldFind",
-        'query': f"server=2&world=57&{query}&limit=5000",
+        'query': f"{query}&limit=5000",
         'order': "asc",
         "sort": "nick",
         "start": "0",
@@ -110,4 +118,4 @@ def fetch_cities_data(query: str, player_name: str = None) -> list[CityInfo]:
         return cities
 
     else:
-        raise ValueError("Error! Page did not return any JSON data!")
+        raise ValueError(f"the {f'player {player_name}' if player_name else 'alliance'} doesn't exist in this world/region")

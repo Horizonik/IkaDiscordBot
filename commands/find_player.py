@@ -1,9 +1,10 @@
 import json
+import os
 
 import discord
 from table2ascii import table2ascii as t2a, PresetStyle, Alignment
 
-from utils.constants import ISLAND_RANKINGS_FILE_LOCATION
+from utils.constants import ISLAND_RANKINGS_FILE_DIR
 from utils.data_utils import fetch_cities_data
 from utils.general_utils import truncate_string, create_embed
 from utils.types import BaseCommand, CityInfo
@@ -11,8 +12,8 @@ from utils.types import BaseCommand, CityInfo
 
 class FindPlayer(BaseCommand):
 
-    def __init__(self, ctx: discord.Interaction, params: dict):
-        super().__init__(ctx, params)
+    def __init__(self, ctx: discord.Interaction, params: dict, server_settings: dict):
+        super().__init__(ctx, params, server_settings)
 
     async def command_logic(self):
         alliance_name = self.command_params['alliance_name']
@@ -22,7 +23,7 @@ class FindPlayer(BaseCommand):
             raise ValueError(f"a player that goes by the name of '{player_name}' doesn't exist!")
 
         cities_data = fetch_cities_data(
-            f"state=&search=city&nick={player_name}{f'&ally={alliance_name}' if alliance_name else ''}",
+            f"server={self.region_id}&world={self.world_id}&state=&search=city&nick={player_name}{f'&ally={alliance_name}' if alliance_name else ''}",
             self.command_params['player_name']
         )
 
@@ -50,7 +51,7 @@ class FindPlayer(BaseCommand):
 
     def create_city_table_embed(self, cities_data: list[CityInfo]) -> discord.Embed:
         # Load island tier data from the JSON file
-        islands_data = self.load_island_tiers(ISLAND_RANKINGS_FILE_LOCATION)
+        islands_data = self.load_island_tiers(os.path.join(ISLAND_RANKINGS_FILE_DIR, f'{str(self.region_id)}_{str(self.world_id)}.json'))
 
         embed = create_embed(title=f"{str(self.command_params['player_name']).capitalize()}'s City Information")
 

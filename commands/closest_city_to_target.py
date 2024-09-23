@@ -8,11 +8,11 @@ from utils.types import BaseCommand, CityInfo
 
 class ClosestCityToTarget(BaseCommand):
 
-    def __init__(self, ctx: discord.Interaction, params: dict):
-        super().__init__(ctx, params)
+    def __init__(self, ctx: discord.Interaction, params: dict, server_settings: dict):
+        super().__init__(ctx, params, server_settings)
 
     async def command_logic(self):
-        cities_data = fetch_cities_data(f"state=&search=city&nick={self.command_params['player_name']}", self.command_params['player_name'])
+        cities_data = fetch_cities_data(f"server={self.region_id}&world={self.world_id}&state=&search=city&nick={self.command_params['player_name']}", self.command_params['player_name'])
         if not cities_data:
             raise ValueError(f"could not fetch cities data for {self.command_params['player_name']}!")
 

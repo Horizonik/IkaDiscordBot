@@ -2,14 +2,18 @@ import os
 
 from utils.types import WonderType, UnitType
 
-###
-# Variables
-###
+# ----
 GOOD_WONDERS = [WonderType.POSEIDON, WonderType.FORGE]
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # Project root
-ISLAND_RANKINGS_FILE_LOCATION = os.path.join(BASE_DIR, 'data', 'island_rankings.json')
-DATA_FETCH_BASE_URL = 'https://ikalogs.ru/common/report/index/'
+ISLAND_RANKINGS_FILE_DIR = os.path.join(BASE_DIR, 'data', 'islands_data')
+DATA_FETCH_BASE_URL = 'https://ikalogs.ru/common/report/index/'  # link to call to obtain data from ika-logs
 BOT_TOKEN = os.getenv('BOT_TOKEN')
+# ----
+DEFAULT_SETTINGS_FILE_PATH = os.path.join(BASE_DIR, 'data', 'settings', 'default_settings.json')  # A set of default settings to fall back to
+SETTINGS_FILE_PATH = os.path.join(BASE_DIR, 'data', 'settings', 'server_settings.json')  # Contains all the settings from each server the bot is in
+# ----
+REGION_MAPPINGS_FILE_PATH = os.path.join(BASE_DIR, 'data', 'mappings', 'region', 'region_short_name_to_id.json')
+WORLD_MAPPINGS_FILE_PATH = os.path.join(BASE_DIR, 'data', 'mappings', 'world', 'world_name_to_id.json')
 
 ###
 # Bot Emoji Id's (these values are different between different discord apps)
@@ -100,4 +104,9 @@ LIST_BEST_ISLANDS_DESCRIPTION = {
     "resource_type": "Filter for islands that only contain this specific resource",
     "miracle_type": "Filter for islands that only contain this specific miracle",
     "no_full_islands": "Do you want to see full islands in the results? Default true.",
+}
+
+CHANGE_SETTING_DESCRIPTION = {
+    "setting": "The setting to change",
+    "new_value": "The new value for the setting"
 }
