@@ -36,12 +36,19 @@ class FindPlayer(BaseCommand):
     @staticmethod
     def load_island_tiers(filepath: str):
         """Loads island tier data from a JSON file."""
-        with open(filepath, 'r') as file:
-            return json.load(file)
+        try:
+            with open(filepath, 'r') as file:
+                return json.load(file)
+        except FileNotFoundError as e:
+            return {}
 
     @staticmethod
     def get_island_tier(coords: tuple, islands_data: list[dict]):
         """Finds the tier of the island based on city coordinates."""
+
+        if not islands_data:
+            return 'N/A'
+
         for island in islands_data:
             if 'tier' in island:
                 if island['coords'][0] == coords[0] and island['coords'][1] == coords[1]:
