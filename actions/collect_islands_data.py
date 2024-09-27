@@ -18,9 +18,11 @@ def fetch_rank_all_islands_and_save_to_file():
 
     islands_data = fetch_islands_data(world_id, region_id)
     print(f"Fetched {len(islands_data)} islands!")
+
     ranked_islands = rank_islands(islands_data)
     print(f"Ranked {len(ranked_islands)} islands!")
-    tier_ranked_islands = assign_rank_tiers(ranked_islands)  # Assign letter-based rankings (S,A,B,C,D tiers)
+
+    tier_ranked_islands = assign_rank_tiers(ranked_islands)
     print(f"Added tiers to {len(tier_ranked_islands)} ranked islands!")
 
     # Export the ranked islands to a file

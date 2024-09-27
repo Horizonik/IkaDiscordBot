@@ -2,29 +2,39 @@ import os
 
 from utils.types import WonderType, UnitType
 
-# ----
-GOOD_WONDERS = [WonderType.POSEIDON, WonderType.FORGE]
+# - General Settings -
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # Project root
-ISLAND_RANKINGS_FILE_DIR = os.path.join(BASE_DIR, 'data', 'islands_data')
 DATA_FETCH_BASE_URL = 'https://ikalogs.ru/common/report/index/'  # link to call to obtain data from ika-logs
 BOT_TOKEN = os.getenv('BOT_TOKEN')
-# ----
+
+# - File Paths -
+ISLAND_RANKINGS_FILE_DIR = os.path.join(BASE_DIR, 'data', 'islands_data')
 DEFAULT_SETTINGS_FILE_PATH = os.path.join(BASE_DIR, 'data', 'settings', 'default_settings.json')  # A set of default settings to fall back to
 SETTINGS_FILE_PATH = os.path.join(BASE_DIR, 'data', 'settings', 'server_settings.json')  # Contains all the settings from each server the bot is in
-# ----
 REGION_MAPPINGS_FILE_PATH = os.path.join(BASE_DIR, 'data', 'mappings', 'region', 'region_short_name_to_id.json')
 WORLD_MAPPINGS_FILE_PATH = os.path.join(BASE_DIR, 'data', 'mappings', 'world', 'world_name_to_id.json')
+TRADE_HISTORY_FILE_PATH = os.path.join(BASE_DIR, 'data', 'trades', 'trade_history.json')
 
-###
-# Bot Emoji Id's (these values are different between different discord apps)
-###
+# - Configurations -
+GOOD_WONDERS = [WonderType.POSEIDON, WonderType.FORGE]
+TRADE_REG_PATTERN = r"trade:\s*(.*)\s*for\s*(.*)"
+
+# - Bot Emojis Mappings -
 e_advisor_bloated = '<:advisor_bloated:1287019312103686302>'
 e_citizen_head = '<:citizen_head:1287019270513102948>'
 e_very_outraged = '<:very_outraged:1287536914160816128>'
 e_ecstatic = ' <:ecstatic:1287536875938123839>'
 e_outraged = ' <:outraged:1287536862075945030>'
 
-# Units data. Based on data from the ikariam wiki - may not be accurate
+RESOURCE_EMOJIS = {
+    "marble": '<:marble:1289237361456054302>',
+    "wood": '<:wood:1289237298453413941>',
+    "wine": '<:wine:1289237379374125068>',
+    "sulphur": '<:sulphur:1289237326056132668>',
+    "crystal": '<:crystal:1289237345614299186>',
+}
+
+# - Unit Speeds -
 unit_speeds = {
     UnitType.GYROCOPTER: 60,
     UnitType.DOCTOR: 48,
@@ -67,10 +77,8 @@ ship_units = {
     UnitType.TENDER
 }
 
-###
-# Parameter descriptions for every command. These are imported into bot.py for use with discord.py
-###
-
+# - Parameter descriptions for every command -
+# These are imported into bot.py for use with discord.py
 CALCULATE_CLUSTERS_DESCRIPTION = {
     "alliance_name": "Name of the alliance to calculate clusters for",
     "min_cities_per_island": "Minimum number of cities required on an island for it to be included",

@@ -3,7 +3,6 @@ import traceback
 from enum import Enum
 
 import discord
-from discord import app_commands
 
 
 class BaseCommand:
@@ -239,49 +238,3 @@ class ClusterInfo:
 class ConfigurableSetting(Enum):
     REGION = "region"
     WORLD = "world"
-
-
-class DiscordBotClient(discord.Client):
-    def __init__(self):
-        intents = discord.Intents.default()
-        intents.messages = True
-        intents.message_content = True
-        super().__init__(intents=intents)
-
-        self.tree = app_commands.CommandTree(self)
-
-    async def setup_hook(self):
-        # Sync commands globally to all servers the bot is in
-        await self.tree.sync()
-
-    async def on_ready(self):
-        await self.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Ikariam"))
-        print(
-            f"{datetime.datetime.now()} | Logged in as {self.user} (ID: {self.user.id}) \n"
-            "------"
-        )
-
-    async def on_disconnect(self):
-        print(
-            f"{datetime.datetime.now()} | Disconnected from Discord, or a connection attempt to Discord has failed, \n"
-            "this could happen either through the internet being disconnected or explicit calls being too close. \n"
-            "------"
-        )
-
-    async def on_connect(self):
-        print(f"{datetime.datetime.now()} | Successfully connected to Discord Services")
-
-    async def on_guild_join(self, guild: discord.Guild):
-        # Prepare the greeting message
-        greeting_message = (
-            f"Hello, {guild.name}! 👋\n"
-            "I'm your friendly bot designed to assist your Ikariam endeavors. "
-            "I can help you calculate travel times, find players cities, and more!\n\n"
-            "To get started, please configure the settings so I know which world to fetch data for. "
-            "You can use the `/set_setting world <your_world_number>` command to set the world.\n"
-            "Feel free to ask me for help with any commands!"
-        )
-
-        # Send the message to the system channel if available
-        if guild.system_channel:
-            await guild.system_channel.send(greeting_message)

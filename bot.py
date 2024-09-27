@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import discord
 from discord import app_commands
 
@@ -8,6 +10,7 @@ from commands.help import HelpCommand
 from commands.list_best_islands import ListBestIslands
 from commands.manage_settings import ResetSettings, ShowSettings, ChangeSetting
 from commands.travel_time import CalculateTravelTime
+from handlers.emote_on_trade_msg import check_msg_for_trade_offer
 from utils.constants import (
     CALCULATE_CLUSTERS_DESCRIPTION,
     FIND_PLAYER_DESCRIPTION,
@@ -21,7 +24,61 @@ from utils.constants import (
 from utils.data_utils import load_json_file
 from utils.general_utils import create_embed
 from utils.settings_manager import validate_server_settings, DEFAULT_SETTINGS, save_settings
-from utils.types import DiscordBotClient, WonderType, ResourceType, UnitType, ConfigurableSetting
+from utils.types import WonderType, ResourceType, UnitType, ConfigurableSetting
+
+
+class DiscordBotClient(discord.Client):
+    def __init__(self):
+        intents = discord.Intents.default()
+        intents.messages = True
+        intents.message_content = True
+        super().__init__(intents=intents)
+
+        self.tree = app_commands.CommandTree(self)
+
+    async def setup_hook(self):
+        # Sync commands globally to all servers the bot is in
+        await self.tree.sync()
+
+    async def on_ready(self):
+        await self.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Ikariam"))
+        print(
+            f"{datetime.now()} | Logged in as {self.user} (ID: {self.user.id}) \n"
+            "------"
+        )
+
+    async def on_message(self, message: discord.Message):
+        if message.author == self.user:
+            return
+
+        # Call the trade checking logic
+        await check_msg_for_trade_offer(message, self)
+
+    async def on_disconnect(self):
+        print(
+            f"{datetime.now()} | Disconnected from Discord, or a connection attempt to Discord has failed, \n"
+            "this could happen either through the internet being disconnected or explicit calls being too close. \n"
+            "------"
+        )
+
+    async def on_connect(self):
+        print(f"{datetime.now()} | Successfully connected to Discord Services")
+
+    async def on_guild_join(self, guild: discord.Guild):
+        # Prepare the greeting message
+        greeting_message = (
+            f"Hello, {guild.name}! 👋\n"
+            "I'm your friendly bot designed to assist your Ikariam endeavors. "
+            "I can help you calculate travel times, find players' cities, and more!\n\n"
+            "To get started, please configure the settings so I know which world to fetch data for. "
+            "You can use the `/set_setting world <your_world_number>` command to set the world.\n"
+            "Feel free to ask me for help with any commands!"
+        )
+
+        # Send the message to the system channel if available
+        if guild.system_channel:
+            await guild.system_channel.send(greeting_message)
+
 
 client = DiscordBotClient()
 server_settings = load_json_file(SETTINGS_FILE_PATH)
