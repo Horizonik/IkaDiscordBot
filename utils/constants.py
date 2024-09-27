@@ -27,11 +27,12 @@ e_ecstatic = ' <:ecstatic:1287536875938123839>'
 e_outraged = ' <:outraged:1287536862075945030>'
 
 RESOURCE_EMOJIS = {
-    "marble": '<:marble:1289237361456054302>',
-    "wood": '<:wood:1289237298453413941>',
-    "wine": '<:wine:1289237379374125068>',
-    "sulphur": '<:sulphur:1289237326056132668>',
-    "crystal": '<:crystal:1289237345614299186>',
+    "marble": '<:marble:1289267605055475762>',
+    "wood": '<:wood:1289267533484134400>',
+    "wine": '<:wine:1289267622931599441>',
+    "sulphur": '<:sulphur:1289267553071267880>',
+    "crystal": '<:crystal:1289267588425191464>',
+    "gold": '<:gold:1289267640149348372>',
 }
 
 # - Unit Speeds -

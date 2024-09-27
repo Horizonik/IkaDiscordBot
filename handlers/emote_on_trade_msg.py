@@ -92,8 +92,9 @@ def check_for_trade_match(guild_id, user_id, offer, want):
 
     # Check for a matching trade
     for trader_id, trades in guild_trades.items():
-        # if trader_id == user_id_str:  # Compare as strings
-        #     continue
+        # skip if the trade was posted by the same person
+        if trader_id == user_id_str:
+            continue
 
         for trade in trades:
             # Check if the trades match (offer and want swapped)
