@@ -5,10 +5,10 @@ import discord
 
 from utils.constants import GOOD_WONDERS
 from utils.math_utils import get_distance_from_target
-from utils.types import CityInfo, IslandInfo, ResourceType, WonderType
+from utils.types import CityData, IslandData, ResourceType, WonderType
 
 
-def count_cities_per_island(cities_data: list[CityInfo]) -> dict:
+def count_cities_per_island(cities_data: list[CityData]) -> dict:
     city_counts = defaultdict(int)
 
     for city in cities_data:
@@ -32,8 +32,8 @@ def generate_cluster_name() -> str:
     return f"{random.choice(prefixes)}{random.choice(suffixes)}"
 
 
-def rank_islands(islands_data: list[IslandInfo], resource_type: ResourceType = None, miracle_type: WonderType = None,
-                 no_full_islands: bool = False) -> list[tuple[IslandInfo, int]]:
+def rank_islands(islands_data: list[IslandData], resource_type: ResourceType = None, miracle_type: WonderType = None,
+                 no_full_islands: bool = False) -> list[tuple[IslandData, int]]:
     # Filter islands based on the input criteria
     if resource_type:
         islands_data = [island for island in islands_data if island.resource_type == str(resource_type)]
@@ -45,7 +45,7 @@ def rank_islands(islands_data: list[IslandInfo], resource_type: ResourceType = N
         islands_data = [island for island in islands_data if len(island.cities) < 16]
 
     # Calculate ranking score for each island
-    def calculate_rank(island: IslandInfo) -> int:
+    def calculate_rank(island: IslandData) -> int:
         rank_score = 0
         free_spots_weight = 5  # Score weight per free spot
 
@@ -84,6 +84,36 @@ def create_embed(title: str = "", description: str = "", color: discord.Color = 
     """Standardize all embeds"""
 
     embed = discord.Embed(title=title, description=description, color=color)
-    embed.set_footer(text=f"© IkaDiscordBot, by Gemesil")
+    embed.set_footer(text="© IkaDiscordBot, by Gemesil")
 
     return embed
+
+
+def calculate_amount_of_open_spots(island_data: IslandData) -> int:
+    return 16 - len(island_data.cities) if hasattr(island_data, 'cities') else 16
+
+
+def get_island_tier(coords: tuple, islands_data: list[dict]) -> str:
+    if not islands_data:
+        return 'N/A'
+
+    for island in islands_data:
+        if 'tier' in island:
+            if island['coords'][0] == coords[0] and island['coords'][1] == coords[1]:
+                return island['tier']
+        else:
+            return 'N/A'
+
+
+def collect_island_data(island_data: IslandData, coords: tuple) -> list[tuple | int | str]:
+    # Format island information
+    open_spots = calculate_amount_of_open_spots(island_data)
+    wonder_info = f"[{island_data.wonder_level}]{truncate_string(island_data.wonder_type, 6).capitalize()}"
+    resource_info = f"[{island_data.resource_level}]{truncate_string(island_data.resource_type, 6).capitalize()}"
+
+    # Append row data for the table
+    return [coords, open_spots, island_data.wood_level, resource_info, wonder_info, island_data.tier]
+
+
+def coords_to_string(coords: tuple):
+    return f"{coords[0]}:{coords[1]}"

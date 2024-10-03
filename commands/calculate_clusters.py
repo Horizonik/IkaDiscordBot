@@ -2,9 +2,9 @@ from itertools import product
 
 import discord
 
-from utils.data_utils import fetch_cities_data
+from utils.data_utils import fetch_data
 from utils.general_utils import count_cities_per_island, generate_cluster_name, create_embed
-from utils.types import BaseCommand, CityInfo
+from utils.types import BaseCommand, CityData
 
 
 class CalculateClusters(BaseCommand):
@@ -14,7 +14,7 @@ class CalculateClusters(BaseCommand):
 
     # noinspection PyUnresolvedReferences
     async def command_logic(self):
-        cities_data = fetch_cities_data(
+        cities_data = fetch_data(
             f"server={self.region_id}&world={self.world_id}&state=active&search=ally&allies[1]={self.command_params['alliance_name']}")
         if not cities_data:
             raise ValueError(f"alliance '{self.command_params['alliance_name']}' doesn't exist or has no data!")
@@ -44,7 +44,7 @@ class CalculateClusters(BaseCommand):
 
         return embed
 
-    def clusters_to_str(self, clusters: list[list[CityInfo]], city_counts: dict) -> list[str]:
+    def clusters_to_str(self, clusters: list[list[CityData]], city_counts: dict) -> list[str]:
         formatted_clusters = []
         cluster_index = 1
 
@@ -65,13 +65,13 @@ class CalculateClusters(BaseCommand):
 
         return formatted_clusters
 
-    def cluster_cities(self, cities_data: list[CityInfo]) -> list[list[CityInfo]]:
+    def cluster_cities(self, cities_data: list[CityData]) -> list[list[CityData]]:
         coord_set = set(city.coords for city in cities_data)
         visited = set()
         clusters = []
 
         # Helper function for depth-first search
-        def depth_first_search(city: CityInfo, cluster: list):
+        def depth_first_search(city: CityData, cluster: list):
             stack = [city]
             while stack:
                 current_city = stack.pop()
@@ -103,6 +103,6 @@ class CalculateClusters(BaseCommand):
 
         return clusters
 
-    def filter_data_by_min_amount_of_cities_on_island(self, cities_data: list[CityInfo], city_counts: dict) -> list:
+    def filter_data_by_min_amount_of_cities_on_island(self, cities_data: list[CityData], city_counts: dict) -> list:
         return [city for city in cities_data if
                 city_counts[city.coords] >= self.command_params['min_cities_per_island']]

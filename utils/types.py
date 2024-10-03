@@ -129,7 +129,12 @@ class UnitType(Enum):
     TENDER = "Tender"
 
 
-class CityInfo:
+class ClosestCitySearchTypes(Enum):
+    ALLIANCE = "Alliance"
+    PLAYER = "Player"
+
+
+class CityData:
     coords: tuple[int, int]
     x: int
     y: int
@@ -149,6 +154,7 @@ class CityInfo:
 
     player_name: str
     player_score: int
+    ally_name: str
 
     def __init__(self, data: dict):
         # Automatically grab class annotations (aka attributes)
@@ -180,14 +186,14 @@ class CityInfo:
         )
 
 
-class IslandInfo:
+class IslandData:
     coords: tuple[int, int]
     name: str
     tier: str
     x: int
     y: int
 
-    cities: list[CityInfo]
+    cities: list[CityData]
 
     wood_level: int
 
@@ -197,7 +203,7 @@ class IslandInfo:
     wonder_type: str
     wonder_level: int
 
-    def __init__(self, data: dict, cities: list[CityInfo] = None):
+    def __init__(self, data: dict, cities: list[CityData] = None):
         # Automatically grab class annotations (aka attributes)
         for attr, attr_type in self.__annotations__.items():
             if attr in data:
@@ -207,6 +213,7 @@ class IslandInfo:
             self.cities = cities
 
         self.name = data['island_name'] if 'island_name' in data else data['name']
+        self.coords = (data['x'], data['y'])
 
     def __repr__(self):
         return (
@@ -214,27 +221,6 @@ class IslandInfo:
             f"WONDER={self.wonder_type} [{self.wonder_level}], "
             f"RES={self.resource_type} [{self.resource_level}], "
             f"WOOD=[{self.wood_level}]>"
-        )
-
-
-class ClusterInfo:
-    name: str
-    rating: int  # Score on how good are the cities in this cluster altogether
-    cities: list[CityInfo]
-    islands: list[IslandInfo]
-
-    def __init__(self, name: str, rating: int, cities: list[CityInfo], islands: list[IslandInfo] = None):
-        self.name = name
-        self.rating = rating
-        self.cities = cities  # List of CityInfo instances
-        self.islands = islands  # List of IslandInfo instances
-
-    def __repr__(self) -> str:
-        return (
-            f"<ClusterInfo(name={self.name}, "
-            f"rating={self.rating}, "
-            f"cities_count={len(self.cities)}, "
-            f"islands_count={len(self.islands)})>"
         )
 
 

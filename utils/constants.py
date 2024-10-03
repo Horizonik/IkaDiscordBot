@@ -99,6 +99,10 @@ FIND_PLAYER_DESCRIPTION = {
     "alliance_name": "Optional - Name of the alliance the player belongs to"
 }
 
+FIND_ISLAND_DESCRIPTION = {
+    "coords": "The location of the island (in X:Y format)",
+}
+
 TRAVEL_TIME_DESCRIPTION = {
     "unit_type": "LAND/SEA",
     "start_coords": "The coords that the units come from",
@@ -107,7 +111,8 @@ TRAVEL_TIME_DESCRIPTION = {
 }
 
 CLOSEST_CITY_TO_TARGET_DESCRIPTION = {
-    "player_name": "The name of the player",
+    "search_type": "The type of search you'd like to make. If 'alliance', will search for closest ally city, if 'player', will search for closest player city.",
+    "name": "The name of the player/alliance depending on what you chose at search_type",
     "coords": "The target location to which we will compare city distances of the selected player"
 }
 

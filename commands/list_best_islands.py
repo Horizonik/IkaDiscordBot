@@ -5,8 +5,8 @@ from table2ascii import table2ascii as t2a, PresetStyle, Alignment
 
 from utils.constants import ISLAND_RANKINGS_FILE_DIR
 from utils.data_utils import load_islands_data_from_file
-from utils.general_utils import rank_islands, truncate_string, create_embed
-from utils.types import BaseCommand, IslandInfo
+from utils.general_utils import rank_islands, create_embed, collect_island_data, coords_to_string
+from utils.types import BaseCommand, IslandData
 
 
 class ListBestIslands(BaseCommand):
@@ -24,53 +24,37 @@ class ListBestIslands(BaseCommand):
         ranked_islands = rank_islands(ranked_islands_data, self.command_params['resource_type'],
                                       self.command_params['miracle_type'], self.command_params['no_full_islands'])
 
-        embed = self.create_island_ranking_embed(ranked_islands)
+        embed = self.get_result_as_embed(ranked_islands)
         # noinspection PyUnresolvedReferences
         await self.ctx.response.send_message(embed=embed)
 
-    def create_island_ranking_embed(self, islands_data: list[tuple[IslandInfo, int]]) -> discord.Embed:
-        """Generates a table that shows the best islands and their ranking"""
+    def get_result_as_embed(self, islands_data: list[tuple[IslandData, int]]) -> discord.Embed:
         best_islands = islands_data[:10]  # Get the top 10 islands
-
-        embed = create_embed(
-            title=f"Top {len(best_islands)} out of {len(islands_data)} total matching islands",
-            description=(
-                f"Island filters: {str(self.command_params['miracle_type']).capitalize()} miracle "
-                f"and {str(self.command_params['resource_type']).capitalize()} resource, "
-                f"full islands {'not ' if self.command_params['no_full_islands'] else ''}allowed."
-            )
-        )
 
         # Prepare data for the table
         table_data = []
-        for island, _ in best_islands:
-            coords = f"{island.coords[0]}:{island.coords[1]}"
-            open_slots = 16 - len(island.cities) if hasattr(island, 'cities') else 16
-            wood_level = island.wood_level
-            wonder_info = f"[{island.wonder_level}]{truncate_string(island.wonder_type, 6).capitalize()}"
-            resource_info = f"[{island.resource_level}]{truncate_string(island.resource_type, 6).capitalize()}"
-            tier = island.tier
-
-            # Append row data
-            table_data.append([coords, open_slots, wood_level, resource_info, wonder_info, tier])
+        for island_data, _ in best_islands:
+            table_data.append(collect_island_data(island_data, coords_to_string(island_data.coords)))
 
         table_content = t2a(
             header=["Coords", "Spots", "Wood", "Resource", "Wonder", "Tier"],
             body=table_data,
             style=PresetStyle.thick_compact,
-            alignments=[Alignment.CENTER, Alignment.LEFT, Alignment.LEFT, Alignment.CENTER, Alignment.CENTER,
-                        Alignment.CENTER]
+            alignments=[Alignment.CENTER, Alignment.LEFT, Alignment.LEFT, Alignment.CENTER, Alignment.CENTER, Alignment.CENTER]
+        )
+
+        # Create embed for island stats
+        embed = create_embed(
+            title=f"Top {len(best_islands)} {str(self.command_params['resource_type'])} {str(self.command_params['miracle_type'])} islands (Out of {len(islands_data)} applicable)",
+            description=f"Top {len(best_islands)} best {str(self.command_params['resource_type'])} {str(self.command_params['miracle_type'])} islands"
         )
 
         embed.add_field(name="", value=f"```\n{table_content}\n```", inline=False)
-        embed.add_field(name="",
-                        value="Rankings are based on mine levels, wonders, available spots and distance from center of the map.",
-                        inline=False)
 
         return embed
 
 
-def assign_rank_tiers(ranked_islands: list[tuple[IslandInfo, int]]) -> list[IslandInfo]:
+def assign_rank_tiers(ranked_islands: list[tuple[IslandData, int]]) -> list[IslandData]:
     # Extract scores and calculate min and max
     scores = [score for _, score in ranked_islands]
     max_score = max(scores)

@@ -5,9 +5,9 @@ import discord
 from table2ascii import table2ascii as t2a, PresetStyle, Alignment
 
 from utils.constants import ISLAND_RANKINGS_FILE_DIR
-from utils.data_utils import fetch_cities_data
-from utils.general_utils import truncate_string, create_embed
-from utils.types import BaseCommand, CityInfo
+from utils.data_utils import fetch_data
+from utils.general_utils import truncate_string, create_embed, get_island_tier
+from utils.types import BaseCommand, CityData
 
 
 class FindPlayer(BaseCommand):
@@ -22,7 +22,7 @@ class FindPlayer(BaseCommand):
         if len(player_name) < 3 or len(player_name) > 15:
             raise ValueError(f"a player that goes by the name of '{player_name}' doesn't exist!")
 
-        cities_data = fetch_cities_data(
+        cities_data = fetch_data(
             f"server={self.region_id}&world={self.world_id}&state=&search=city&nick={player_name}{f'&ally={alliance_name}' if alliance_name else ''}",
             self.command_params['player_name']
         )
@@ -44,21 +44,7 @@ class FindPlayer(BaseCommand):
             print(f"Did not find islands data file! Error: {e}")
             return {}
 
-    @staticmethod
-    def get_island_tier(coords: tuple, islands_data: list[dict]):
-        """Finds the tier of the island based on city coordinates."""
-
-        if not islands_data:
-            return 'N/A'
-
-        for island in islands_data:
-            if 'tier' in island:
-                if island['coords'][0] == coords[0] and island['coords'][1] == coords[1]:
-                    return island['tier']
-            else:
-                return 'N/A'
-
-    def create_city_table_embed(self, cities_data: list[CityInfo]) -> discord.Embed:
+    def create_city_table_embed(self, cities_data: list[CityData]) -> discord.Embed:
         # Load island tier data from the JSON file
         islands_data = self.load_island_tiers(
             os.path.join(ISLAND_RANKINGS_FILE_DIR, f'{str(self.region_id)}_{str(self.world_id)}.json'))
@@ -74,7 +60,7 @@ class FindPlayer(BaseCommand):
             resource_type = truncate_string(city.resource_type, 6)
 
             # Get the tier of the island
-            island_tier = self.get_island_tier(city.coords, islands_data)
+            island_tier = get_island_tier(city.coords, islands_data)
 
             # Append row data
             table_data.append([

@@ -5,6 +5,7 @@ from discord import app_commands
 
 from commands.calculate_clusters import CalculateClusters
 from commands.closest_city_to_target import ClosestCityToTarget
+from commands.find_island import FindIsland
 from commands.find_player import FindPlayer
 from commands.help import HelpCommand
 from commands.list_best_islands import ListBestIslands
@@ -19,12 +20,12 @@ from utils.constants import (
     LIST_BEST_ISLANDS_DESCRIPTION,
     BOT_TOKEN,
     SETTINGS_FILE_PATH,
-    CHANGE_SETTING_DESCRIPTION
+    CHANGE_SETTING_DESCRIPTION, FIND_ISLAND_DESCRIPTION
 )
 from utils.data_utils import load_json_file
 from utils.general_utils import create_embed
 from utils.settings_manager import validate_server_settings, DEFAULT_SETTINGS, save_settings
-from utils.types import WonderType, ResourceType, UnitType, ConfigurableSetting
+from utils.types import WonderType, ResourceType, UnitType, ConfigurableSetting, ClosestCitySearchTypes
 
 
 class DiscordBotClient(discord.Client):
@@ -125,6 +126,13 @@ async def find_player(interaction: discord.Interaction, player_name: str, allian
 
 
 @client.tree.command()
+@app_commands.describe(**FIND_ISLAND_DESCRIPTION)
+async def find_island(interaction: discord.Interaction, coords: str):
+    """Retrieves information about the island"""
+    await run_command(interaction, FindIsland, {"coords": coords})
+
+
+@client.tree.command()
 @app_commands.describe(**TRAVEL_TIME_DESCRIPTION)
 async def travel_time(
         interaction: discord.Interaction, unit_type: UnitType, start_coords: str, destination_coords: str,
@@ -143,10 +151,11 @@ async def travel_time(
 
 @client.tree.command()
 @app_commands.describe(**CLOSEST_CITY_TO_TARGET_DESCRIPTION)
-async def closest_city_to_target(interaction: discord.Interaction, player_name: str, coords: str):
-    """Checks which of the player's cities is the closest to the target island"""
+async def closest_city_to_target(interaction: discord.Interaction, search_type: ClosestCitySearchTypes, name: str, coords: str):
+    """Checks which of the player's/alliance cities is the closest to the target island"""
     await run_command(interaction, ClosestCityToTarget, {
-        "player_name": player_name.lower(),
+        "search_type": search_type,
+        "name": name.lower(),
         "coords": coords
     })
 
