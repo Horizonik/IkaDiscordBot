@@ -45,6 +45,7 @@ def get_world_id(world_title: str, world_mapping: dict):
 def validate_server_settings(server_settings: dict, default_settings: dict) -> dict:
     """Ensure server settings exist and validate necessary fields."""
     for guild_id in server_settings.keys():
+
         # Ensure guild has both settings
         if 'region' not in server_settings[guild_id]:
             server_settings[guild_id]['region'] = default_settings['region']

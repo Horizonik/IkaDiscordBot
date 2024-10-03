@@ -3,9 +3,9 @@ from collections import defaultdict
 
 import discord
 
-from constants import GOOD_WONDERS
-from math_utils import get_distance_from_target
-from types import CityInfo, IslandInfo, ResourceType, WonderType
+from utils.constants import GOOD_WONDERS
+from utils.math_utils import get_distance_from_target
+from utils.types import CityInfo, IslandInfo, ResourceType, WonderType
 
 
 def count_cities_per_island(cities_data: list[CityInfo]) -> dict:
