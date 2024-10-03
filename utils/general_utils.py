@@ -3,9 +3,9 @@ from collections import defaultdict
 
 import discord
 
-from .constants import GOOD_WONDERS
-from .math_utils import get_distance_from_target
-from .types import CityInfo, IslandInfo, ResourceType, WonderType
+from constants import GOOD_WONDERS
+from math_utils import get_distance_from_target
+from types import CityInfo, IslandInfo, ResourceType, WonderType
 
 
 def count_cities_per_island(cities_data: list[CityInfo]) -> dict:
@@ -32,7 +32,8 @@ def generate_cluster_name() -> str:
     return f"{random.choice(prefixes)}{random.choice(suffixes)}"
 
 
-def rank_islands(islands_data: list[IslandInfo], resource_type: ResourceType = None, miracle_type: WonderType = None, no_full_islands: bool = False) -> list[tuple[IslandInfo, int]]:
+def rank_islands(islands_data: list[IslandInfo], resource_type: ResourceType = None, miracle_type: WonderType = None,
+                 no_full_islands: bool = False) -> list[tuple[IslandInfo, int]]:
     # Filter islands based on the input criteria
     if resource_type:
         islands_data = [island for island in islands_data if island.resource_type == str(resource_type)]
@@ -69,7 +70,8 @@ def rank_islands(islands_data: list[IslandInfo], resource_type: ResourceType = N
 
     # List of islands with their rank scores
     ranked_islands = [(island, calculate_rank(island)) for island in islands_data]
-    ranked_islands.sort(key=lambda ranked_island: ranked_island[1], reverse=True)  # ranked_island[1] is the score of the island
+    ranked_islands.sort(key=lambda ranked_island: ranked_island[1],
+                        reverse=True)  # ranked_island[1] is the score of the island
 
     return ranked_islands
 

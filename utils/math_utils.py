@@ -2,7 +2,7 @@ import math
 
 
 def get_distance_from_target(city_coords: tuple, target_coords: tuple):
-    """Calculates which city is the closest to the target location using the euclidean distance formula"""
+    """Calculates which city is the closest to the target location using the Euclidean distance formula"""
     x1, y1 = city_coords
     x2, y2 = target_coords
 

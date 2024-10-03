@@ -1,6 +1,6 @@
+import datetime
 import json
 import re
-from datetime import datetime, timedelta
 
 import discord
 
@@ -48,7 +48,7 @@ def track_trade(guild_id, user_id, offer, want):
     trade_history[guild_id_str][user_id_str].append({
         "offer": offer,
         "want": want,
-        "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M")  # Format the timestamp
+        "timestamp": datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%d %H:%M")  # Format the timestamp
     })
 
     # Debugging: Print the updated trade history
@@ -69,14 +69,15 @@ def check_for_trade_match(guild_id, user_id, offer, want):
     if guild_id_str not in trade_history:
         return None, None  # No trades in this guild yet
 
-    current_time = datetime.utcnow()
+    current_time = datetime.datetime.now(datetime.UTC)
     guild_trades = trade_history[guild_id_str]
 
     # Filter out expired trades
     expired_traders = []
     for trader_id, trades in guild_trades.items():
         # Remove expired trades for this user
-        trades = [trade for trade in trades if current_time - datetime.fromisoformat(trade['timestamp']) <= timedelta(hours=24)]
+        trades = [trade for trade in trades if
+                  current_time - datetime.datetime.fromisoformat(trade['timestamp']) <= datetime.timedelta(hours=24)]
         if not trades:  # If no trades left, mark for deletion
             expired_traders.append(trader_id)
         else:
@@ -113,7 +114,8 @@ async def check_msg_for_trade_offer(message: discord.Message, bot):
         offer_with_emojis = convert_to_emojis(offer)
         want_with_emojis = convert_to_emojis(want)
 
-        embed = create_embed(description=f"{message.author.mention} is looking to trade: {offer_with_emojis} for {want_with_emojis}")
+        embed = create_embed(
+            description=f"{message.author.mention} is looking to trade: {offer_with_emojis} for {want_with_emojis}")
         embed.set_footer(
             text=f"This offer will expire in 1 day. Post your own offer by typing 'Trade: (resource1) for (resource2)' "
                  f"or message {message.author.name} directly to notify them about the trade"

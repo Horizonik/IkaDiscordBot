@@ -2,7 +2,8 @@ import discord
 
 from utils.constants import SETTINGS_FILE_PATH
 from utils.general_utils import create_embed
-from utils.settings_manager import DEFAULT_SETTINGS, save_settings, get_region_id, get_world_id, REGION_MAPPINGS, WORLD_MAPPINGS
+from utils.settings_manager import DEFAULT_SETTINGS, save_settings, get_region_id, get_world_id, REGION_MAPPINGS, \
+    WORLD_MAPPINGS
 from utils.types import BaseCommand
 
 
@@ -16,6 +17,7 @@ class ChangeSetting(BaseCommand):
         new_value = str(self.command_params["new_value"]).lower()
 
         if setting_name not in DEFAULT_SETTINGS:
+            # noinspection PyUnresolvedReferences
             await self.ctx.response.send_message(
                 embed=create_embed(
                     f"'{setting_name}' key doesn't exist in the settings",
@@ -36,6 +38,7 @@ class ChangeSetting(BaseCommand):
             self.servers_settings[guild_id][setting_name] = new_value
 
         save_settings(self.servers_settings, SETTINGS_FILE_PATH)
+        # noinspection PyUnresolvedReferences
         await self.ctx.response.send_message(
             embed=create_embed(f'Setting `{setting_name}` has been updated to `{new_value}`.'),
             ephemeral=True
@@ -48,6 +51,7 @@ class ChangeSetting(BaseCommand):
             self.servers_settings[guild_id]['region'] = new_value
 
         except ValueError as e:
+            # noinspection PyUnresolvedReferences
             await self.ctx.response.send_message(
                 embed=create_embed(str(e), color=discord.Color.red()),
                 ephemeral=True
@@ -60,6 +64,7 @@ class ChangeSetting(BaseCommand):
             self.servers_settings[guild_id]['world'] = new_value
 
         except ValueError as e:
+            # noinspection PyUnresolvedReferences
             await self.ctx.response.send_message(
                 embed=create_embed(str(e), color=discord.Color.red()),
                 ephemeral=True
@@ -79,6 +84,7 @@ class ShowSettings(BaseCommand):
             if not key.endswith('_id'):
                 embed.add_field(name=key, value=value, inline=False)
 
+        # noinspection PyUnresolvedReferences
         await self.ctx.response.send_message(embed=embed, ephemeral=True)
 
 
@@ -91,6 +97,7 @@ class ResetSettings(BaseCommand):
         self.servers_settings[guild_id] = DEFAULT_SETTINGS.copy()
 
         save_settings(self.servers_settings, SETTINGS_FILE_PATH)
+        # noinspection PyUnresolvedReferences
         await self.ctx.response.send_message(
             embed=create_embed(f'Settings have been reset to default'),
             ephemeral=True

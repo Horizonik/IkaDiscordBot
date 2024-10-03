@@ -20,4 +20,5 @@ class HelpCommand(BaseCommand):
             description = command.description if command.description else "No description available."
             embed.add_field(name=f"/{command.name}", value=description, inline=False)
 
+        # noinspection PyUnresolvedReferences
         await self.ctx.response.send_message(embed=embed, ephemeral=True)

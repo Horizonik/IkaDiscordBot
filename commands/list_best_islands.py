@@ -15,13 +15,17 @@ class ListBestIslands(BaseCommand):
         super().__init__(ctx, params, server_settings)
 
     async def command_logic(self):
-        ranked_islands_data = load_islands_data_from_file(os.path.join(ISLAND_RANKINGS_FILE_DIR, f'{str(self.region_id)}_{str(self.world_id)}.json'))
+        ranked_islands_data = load_islands_data_from_file(
+            os.path.join(ISLAND_RANKINGS_FILE_DIR, f'{str(self.region_id)}_{str(self.world_id)}.json'))
         if not ranked_islands_data:
-            raise ValueError(f"island data is not yet available for the {str(self.guild_settings['region']).upper()} {str(self.guild_settings['world']).capitalize()} server. Sorry")
+            raise ValueError(
+                f"island data is not yet available for the {str(self.guild_settings['region']).upper()} {str(self.guild_settings['world']).capitalize()} server. Sorry")
 
-        ranked_islands = rank_islands(ranked_islands_data, self.command_params['resource_type'], self.command_params['miracle_type'], self.command_params['no_full_islands'])
+        ranked_islands = rank_islands(ranked_islands_data, self.command_params['resource_type'],
+                                      self.command_params['miracle_type'], self.command_params['no_full_islands'])
 
         embed = self.create_island_ranking_embed(ranked_islands)
+        # noinspection PyUnresolvedReferences
         await self.ctx.response.send_message(embed=embed)
 
     def create_island_ranking_embed(self, islands_data: list[tuple[IslandInfo, int]]) -> discord.Embed:
@@ -54,11 +58,14 @@ class ListBestIslands(BaseCommand):
             header=["Coords", "Spots", "Wood", "Resource", "Wonder", "Tier"],
             body=table_data,
             style=PresetStyle.thick_compact,
-            alignments=[Alignment.CENTER, Alignment.LEFT, Alignment.LEFT, Alignment.CENTER, Alignment.CENTER, Alignment.CENTER]
+            alignments=[Alignment.CENTER, Alignment.LEFT, Alignment.LEFT, Alignment.CENTER, Alignment.CENTER,
+                        Alignment.CENTER]
         )
 
         embed.add_field(name="", value=f"```\n{table_content}\n```", inline=False)
-        embed.add_field(name="", value="Rankings are based on mine levels, wonders, available spots and distance from center of the map.", inline=False)
+        embed.add_field(name="",
+                        value="Rankings are based on mine levels, wonders, available spots and distance from center of the map.",
+                        inline=False)
 
         return embed
 

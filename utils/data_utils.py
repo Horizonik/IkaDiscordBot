@@ -72,7 +72,8 @@ def fetch_islands_data(world, region) -> list[IslandInfo]:
 
     for x_coords in range(20, 80):
         for y_coords in range(20, 80):
-            cities_data = fetch_cities_data(f"server={region}&world={world}&state=&search=city&x={x_coords}&y={y_coords}")
+            cities_data = fetch_cities_data(
+                f"server={region}&world={world}&state=&search=city&x={x_coords}&y={y_coords}")
             if cities_data:
                 island_data = create_island_info(cities_data)
                 print(f"Fetched {len(island_data.cities)} cities for island {island_data.name} {island_data.coords}.")
@@ -82,7 +83,8 @@ def fetch_islands_data(world, region) -> list[IslandInfo]:
 
         # Save existing data after finishing each x_coord
         if islands_data:
-            save_islands_data_to_file(copy.deepcopy(islands_data), os.path.join(BASE_DIR, 'data', f'backup_data_for_x_iter_{x_coords}.json'))
+            save_islands_data_to_file(copy.deepcopy(islands_data),
+                                      os.path.join(BASE_DIR, 'data', f'backup_data_for_x_iter_{x_coords}.json'))
             print(f">> Saved the data we collected up to now in a file called backup_data_for_x_iter_{x_coords}")
 
     return islands_data
@@ -118,4 +120,5 @@ def fetch_cities_data(query: str, player_name: str = None) -> list[CityInfo]:
         return cities
 
     else:
-        raise ValueError(f"the {f'player {player_name}' if player_name else 'alliance'} doesn't exist in this world/region")
+        raise ValueError(
+            f"the {f'player {player_name}' if player_name else 'alliance'} doesn't exist in this world/region")

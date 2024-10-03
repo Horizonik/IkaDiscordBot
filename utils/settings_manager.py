@@ -42,7 +42,7 @@ def get_world_id(world_title: str, world_mapping: dict):
     return world_mapping[world_title]
 
 
-def validate_server_settings(server_settings: dict, default_settings: dict, settings_file_path: str) -> dict:
+def validate_server_settings(server_settings: dict, default_settings: dict) -> dict:
     """Ensure server settings exist and validate necessary fields."""
     for guild_id in server_settings.keys():
         # Ensure guild has both settings

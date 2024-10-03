@@ -9,8 +9,8 @@ from utils.types import BaseCommand
 
 class CalculateTravelTime(BaseCommand):
 
-    def __init__(self, ctx: discord.Interaction, params: dict):
-        super().__init__(ctx, params)
+    def __init__(self, ctx: discord.Interaction, params: dict, server_settings: dict):
+        super().__init__(ctx, params, server_settings)
 
     async def command_logic(self):
         unit_type = self.command_params.get('unit_type')
@@ -23,6 +23,7 @@ class CalculateTravelTime(BaseCommand):
             start_x, start_y = map(int, self.command_params['start_coords'].split(':'))
             dest_x, dest_y = map(int, self.command_params['destination_coords'].split(':'))
         except ValueError:
+            # noinspection PyUnresolvedReferences
             await self.ctx.response.send_message("Invalid coordinates format! Use 'XX:YY'.")
             return
 
@@ -51,6 +52,7 @@ class CalculateTravelTime(BaseCommand):
         hours = int(travel_time_minutes // 60)
         minutes = int(travel_time_minutes % 60)
 
+        # noinspection PyUnresolvedReferences
         await self.ctx.response.send_message(
             embed=create_embed(
                 f"{unit_type.name.replace('_', ' ').title()} from {start_x}:{start_y} to {dest_x}:{dest_y}.",

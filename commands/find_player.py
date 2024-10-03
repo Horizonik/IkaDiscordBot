@@ -31,6 +31,7 @@ class FindPlayer(BaseCommand):
         cities_data.sort(key=lambda city: (city.coords[0], city.coords[1]))
 
         embed = self.create_city_table_embed(cities_data)
+        # noinspection PyUnresolvedReferences
         await self.ctx.response.send_message(embed=embed)
 
     @staticmethod
@@ -40,6 +41,7 @@ class FindPlayer(BaseCommand):
             with open(filepath, 'r') as file:
                 return json.load(file)
         except FileNotFoundError as e:
+            print(f"Did not find islands data file! Error: {e}")
             return {}
 
     @staticmethod
@@ -58,7 +60,8 @@ class FindPlayer(BaseCommand):
 
     def create_city_table_embed(self, cities_data: list[CityInfo]) -> discord.Embed:
         # Load island tier data from the JSON file
-        islands_data = self.load_island_tiers(os.path.join(ISLAND_RANKINGS_FILE_DIR, f'{str(self.region_id)}_{str(self.world_id)}.json'))
+        islands_data = self.load_island_tiers(
+            os.path.join(ISLAND_RANKINGS_FILE_DIR, f'{str(self.region_id)}_{str(self.world_id)}.json'))
 
         embed = create_embed(title=f"{str(self.command_params['player_name']).capitalize()}'s City Information")
 

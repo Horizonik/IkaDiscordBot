@@ -9,8 +9,10 @@ BOT_TOKEN = os.getenv('BOT_TOKEN')
 
 # - File Paths -
 ISLAND_RANKINGS_FILE_DIR = os.path.join(BASE_DIR, 'data', 'islands_data')
-DEFAULT_SETTINGS_FILE_PATH = os.path.join(BASE_DIR, 'data', 'settings', 'default_settings.json')  # A set of default settings to fall back to
-SETTINGS_FILE_PATH = os.path.join(BASE_DIR, 'data', 'settings', 'server_settings.json')  # Contains all the settings from each server the bot is in
+DEFAULT_SETTINGS_FILE_PATH = os.path.join(BASE_DIR, 'data', 'settings',
+                                          'default_settings.json')  # A set of default settings to fall back to
+SETTINGS_FILE_PATH = os.path.join(BASE_DIR, 'data', 'settings',
+                                  'server_settings.json')  # Contains all the settings from each server the bot is in
 REGION_MAPPINGS_FILE_PATH = os.path.join(BASE_DIR, 'data', 'mappings', 'region', 'region_short_name_to_id.json')
 WORLD_MAPPINGS_FILE_PATH = os.path.join(BASE_DIR, 'data', 'mappings', 'world', 'world_name_to_id.json')
 TRADE_HISTORY_FILE_PATH = os.path.join(BASE_DIR, 'data', 'trades', 'trade_history.json')

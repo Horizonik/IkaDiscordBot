@@ -12,7 +12,9 @@ class ClosestCityToTarget(BaseCommand):
         super().__init__(ctx, params, server_settings)
 
     async def command_logic(self):
-        cities_data = fetch_cities_data(f"server={self.region_id}&world={self.world_id}&state=&search=city&nick={self.command_params['player_name']}", self.command_params['player_name'])
+        cities_data = fetch_cities_data(
+            f"server={self.region_id}&world={self.world_id}&state=&search=city&nick={self.command_params['player_name']}",
+            self.command_params['player_name'])
         if not cities_data:
             raise ValueError(f"could not fetch cities data for {self.command_params['player_name']}!")
 
@@ -29,6 +31,7 @@ class ClosestCityToTarget(BaseCommand):
 
         # Do something with the closest_city (e.g., return it, use it further in logic)
         embed = self.get_result_as_embed(closest_city, target_coords)
+        # noinspection PyUnresolvedReferences
         await self.ctx.response.send_message(embed=embed)
 
     def get_result_as_embed(self, closest_city: CityInfo, target_coords: tuple) -> discord.Embed:
@@ -41,11 +44,13 @@ class ClosestCityToTarget(BaseCommand):
             emoji = e_outraged
 
         # Create a Discord embed for the closest city
-        embed = create_embed(description=f"Found the closest city to coordinates **{self.command_params.get('coords')}**")
+        embed = create_embed(
+            description=f"Found the closest city to coordinates **{self.command_params.get('coords')}**")
 
         # Adding fields to the embed with city information
         embed.add_field(name="City Name", value=closest_city.city_name, inline=True)
-        embed.add_field(name="City Coordinates", value=f"{closest_city.coords[0]}:{closest_city.coords[1]}", inline=True)
+        embed.add_field(name="City Coordinates", value=f"{closest_city.coords[0]}:{closest_city.coords[1]}",
+                        inline=True)
         embed.add_field(name="Player", value=closest_city.player_name, inline=True)
         embed.add_field(name="Distance to Target", value=f"{distance_to_target}", inline=True)
         embed.add_field(name="Distance to Target (in emojis)", value=f"{emoji}", inline=True)

@@ -82,7 +82,7 @@ class DiscordBotClient(discord.Client):
 
 client = DiscordBotClient()
 server_settings = load_json_file(SETTINGS_FILE_PATH)
-server_settings = validate_server_settings(server_settings, DEFAULT_SETTINGS, SETTINGS_FILE_PATH)
+server_settings = validate_server_settings(server_settings, DEFAULT_SETTINGS)
 
 
 async def run_command(interaction, command_class, command_params: dict = None):
@@ -106,7 +106,8 @@ async def run_command(interaction, command_class, command_params: dict = None):
 ###
 @client.tree.command()
 @app_commands.describe(**CALCULATE_CLUSTERS_DESCRIPTION)
-async def calculate_clusters(interaction: discord.Interaction, alliance_name: str, min_cities_per_island: int, max_cluster_distance: int, min_cities_per_cluster: int):
+async def calculate_clusters(interaction: discord.Interaction, alliance_name: str, min_cities_per_island: int,
+                             max_cluster_distance: int, min_cities_per_cluster: int):
     """Calculates which island groups (clusters) have the most cities from the selected alliance"""
     await run_command(interaction, CalculateClusters, {
         'alliance_name': alliance_name,
@@ -152,7 +153,8 @@ async def closest_city_to_target(interaction: discord.Interaction, player_name: 
 
 @client.tree.command()
 @app_commands.describe(**LIST_BEST_ISLANDS_DESCRIPTION)
-async def list_best_islands(interaction: discord.Interaction, resource_type: ResourceType, miracle_type: WonderType, no_full_islands: bool = True):
+async def list_best_islands(interaction: discord.Interaction, resource_type: ResourceType, miracle_type: WonderType,
+                            no_full_islands: bool = True):
     """
     If available for your world, goes over the islands and attempts to find the best match based on your filters
     """
@@ -197,6 +199,7 @@ async def reset_settings(interaction: discord.Interaction):
 @reset_settings.error
 async def permission_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
     if isinstance(error, app_commands.MissingPermissions):
+        # noinspection PyUnresolvedReferences
         await interaction.response.send_message(
             embed=create_embed(
                 "You do not have permission to use this command. Only administrators can configure my settings.",

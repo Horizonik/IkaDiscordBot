@@ -30,7 +30,8 @@ class BaseCommand:
 
     async def run(self):
         """Run logic for the command"""
-        print(f"{self.command_start_time} | User {self.ctx.user.name} ran the '{self.ctx.command.name}' command with params {self.command_params}")
+        print(
+            f"{self.command_start_time} | User {self.ctx.user.name} ran the '{self.ctx.command.name}' command with params {self.command_params}")
         await self.execute_with_logging()
 
     async def execute_with_logging(self):
@@ -40,12 +41,14 @@ class BaseCommand:
 
         except Exception as e:
             stack_trace = traceback.format_exc()  # Capture the stack trace
-            print(f"{datetime.datetime.now()} | An error occurred while executing command '{self.ctx.command.name}': {str(e)}\n{stack_trace}")
+            print(
+                f"{datetime.datetime.now()} | An error occurred while executing command '{self.ctx.command.name}': {str(e)}\n{stack_trace}")
             embed = discord.Embed(
                 title="Error",
                 description=f"An error occurred: {str(e)}. If this issue persists, please yell at my creator.",
                 color=discord.Color.red()
             )
+            # noinspection PyUnresolvedReferences
             await self.ctx.response.send_message(embed=embed)
 
         finally:
