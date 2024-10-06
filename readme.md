@@ -1,4 +1,4 @@
-# Project Title
+# IkaDiscordBot
 
 A brief description of what this project does and what it's for.
 
