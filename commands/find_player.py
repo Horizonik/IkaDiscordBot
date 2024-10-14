@@ -1,10 +1,7 @@
-import json
-import os
-
 import discord
 from table2ascii import table2ascii as t2a, PresetStyle, Alignment
 
-from utils.constants import ISLAND_RANKINGS_FILE_DIR
+from database.guild_settings_manager import get_islands_data
 from utils.data_utils import fetch_data
 from utils.general_utils import truncate_string, create_embed, get_island_tier
 from utils.types import BaseCommand, CityData
@@ -12,8 +9,8 @@ from utils.types import BaseCommand, CityData
 
 class FindPlayer(BaseCommand):
 
-    def __init__(self, ctx: discord.Interaction, params: dict, server_settings: dict):
-        super().__init__(ctx, params, server_settings)
+    def __init__(self, ctx: discord.Interaction, params: dict, guild_settings: dict):
+        super().__init__(ctx, params, guild_settings)
 
     async def command_logic(self):
         alliance_name = self.command_params['alliance_name']
@@ -34,21 +31,9 @@ class FindPlayer(BaseCommand):
         # noinspection PyUnresolvedReferences
         await self.ctx.response.send_message(embed=embed)
 
-    @staticmethod
-    def load_island_tiers(filepath: str):
-        """Loads island tier data from a JSON file."""
-        try:
-            with open(filepath, 'r') as file:
-                return json.load(file)
-        except FileNotFoundError as e:
-            print(f"Did not find islands data file! Error: {e}")
-            return {}
-
     def create_city_table_embed(self, cities_data: list[CityData]) -> discord.Embed:
         # Load island tier data from the JSON file
-        islands_data = self.load_island_tiers(
-            os.path.join(ISLAND_RANKINGS_FILE_DIR, f'{str(self.region_id)}_{str(self.world_id)}.json'))
-
+        islands_data = get_islands_data(self.world_id, self.region_id)
         embed = create_embed(title=f"{str(self.command_params['player_name']).capitalize()}'s City Information")
 
         # Prepare data for the table
@@ -60,7 +45,7 @@ class FindPlayer(BaseCommand):
             resource_type = truncate_string(city.resource_type, 6)
 
             # Get the tier of the island
-            island_tier = get_island_tier(city.coords, islands_data)
+            island_tier = get_island_tier(city.x, city.y, islands_data)
 
             # Append row data
             table_data.append([

@@ -9,8 +9,8 @@ from utils.types import BaseCommand
 
 class CalculateTravelTime(BaseCommand):
 
-    def __init__(self, ctx: discord.Interaction, params: dict, server_settings: dict):
-        super().__init__(ctx, params, server_settings)
+    def __init__(self, ctx: discord.Interaction, params: dict, guild_settings: dict):
+        super().__init__(ctx, params, guild_settings)
 
     async def command_logic(self):
         unit_type = self.command_params.get('unit_type')

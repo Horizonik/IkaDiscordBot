@@ -8,8 +8,8 @@ from utils.types import BaseCommand, CityData, ClosestCitySearchTypes
 
 class ClosestCityToTarget(BaseCommand):
 
-    def __init__(self, ctx: discord.Interaction, params: dict, server_settings: dict):
-        super().__init__(ctx, params, server_settings)
+    def __init__(self, ctx: discord.Interaction, params: dict, guild_settings: dict):
+        super().__init__(ctx, params, guild_settings)
 
     async def command_logic(self):
         entity_type = self.command_params.get('search_type')  # 'player' or 'alliance'
@@ -60,7 +60,7 @@ class ClosestCityToTarget(BaseCommand):
 
         # Create table with table2ascii
         table_content = t2a(
-            header=["Coords", "City Name", "Owner", f"Distance"],
+            header=["Coords", "City Name", "Owner", "Distance"],
             body=[self.get_city_as_table_row(closest_city, target_coords)],
             style=PresetStyle.thick_compact,
             alignments=[Alignment.CENTER, Alignment.LEFT, Alignment.LEFT, Alignment.CENTER]
@@ -83,7 +83,7 @@ class ClosestCityToTarget(BaseCommand):
 
         # Create table with table2ascii
         table_content = t2a(
-            header=["Coords", "City Name", "Owner", f"Distance"],
+            header=["Coords", "City Name", "Owner", "Distance"],
             body=table_data,
             style=PresetStyle.thick_compact,
             alignments=[Alignment.CENTER, Alignment.LEFT, Alignment.LEFT, Alignment.CENTER]

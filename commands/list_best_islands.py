@@ -1,40 +1,35 @@
-import os
-
 import discord
 from table2ascii import table2ascii as t2a, PresetStyle, Alignment
 
-from utils.constants import ISLAND_RANKINGS_FILE_DIR
-from utils.data_utils import load_islands_data_from_file
+from database.guild_settings_manager import get_islands_data
 from utils.general_utils import rank_islands, create_embed, collect_island_data, coords_to_string
 from utils.types import BaseCommand, IslandData
 
 
 class ListBestIslands(BaseCommand):
 
-    def __init__(self, ctx: discord.Interaction, params: dict, server_settings: dict):
-        super().__init__(ctx, params, server_settings)
+    def __init__(self, ctx: discord.Interaction, params: dict, guild_settings: dict):
+        super().__init__(ctx, params, guild_settings)
 
     async def command_logic(self):
-        ranked_islands_data = load_islands_data_from_file(
-            os.path.join(ISLAND_RANKINGS_FILE_DIR, f'{str(self.region_id)}_{str(self.world_id)}.json'))
+        ranked_islands_data = get_islands_data(self.world_id, self.region_id)
+
         if not ranked_islands_data:
             raise ValueError(
                 f"island data is not yet available for the {str(self.guild_settings['region']).upper()} {str(self.guild_settings['world']).capitalize()} server. Sorry")
 
-        ranked_islands = rank_islands(ranked_islands_data, self.command_params['resource_type'],
-                                      self.command_params['miracle_type'], self.command_params['no_full_islands'])
-
+        ranked_islands = rank_islands(ranked_islands_data, self.command_params['resource_type'], self.command_params['miracle_type'], self.command_params['no_full_islands'])
         embed = self.get_result_as_embed(ranked_islands)
         # noinspection PyUnresolvedReferences
         await self.ctx.response.send_message(embed=embed)
 
-    def get_result_as_embed(self, islands_data: list[tuple[IslandData, int]]) -> discord.Embed:
+    def get_result_as_embed(self, islands_data: list[tuple[dict, int]]) -> discord.Embed:
         best_islands = islands_data[:10]  # Get the top 10 islands
 
         # Prepare data for the table
         table_data = []
         for island_data, _ in best_islands:
-            table_data.append(collect_island_data(island_data, coords_to_string(island_data.coords)))
+            table_data.append(collect_island_data(island_data, coords_to_string((island_data['x'], island_data['y']))))
 
         table_content = t2a(
             header=["Coords", "Spots", "Wood", "Resource", "Wonder", "Tier"],

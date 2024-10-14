@@ -9,9 +9,10 @@ from commands.find_island import FindIsland
 from commands.find_player import FindPlayer
 from commands.help import HelpCommand
 from commands.list_best_islands import ListBestIslands
-from commands.manage_settings import ResetSettings, ShowSettings, ChangeSetting
+from commands.manage_settings import ResetSettings, ShowSettings, UpdateSetting
 from commands.travel_time import CalculateTravelTime
-from handlers.emote_on_trade_msg import check_msg_for_trade_offer
+from database.guild_settings_manager import fetch_or_create_settings
+from handlers.trade_matcher import check_msg_for_trade_offer
 from utils.constants import (
     CALCULATE_CLUSTERS_DESCRIPTION,
     FIND_PLAYER_DESCRIPTION,
@@ -19,12 +20,9 @@ from utils.constants import (
     CLOSEST_CITY_TO_TARGET_DESCRIPTION,
     LIST_BEST_ISLANDS_DESCRIPTION,
     BOT_TOKEN,
-    SETTINGS_FILE_PATH,
     CHANGE_SETTING_DESCRIPTION, FIND_ISLAND_DESCRIPTION
 )
-from utils.data_utils import load_json_file
 from utils.general_utils import create_embed
-from utils.settings_manager import validate_server_settings, DEFAULT_SETTINGS, save_settings
 from utils.types import WonderType, ResourceType, UnitType, ConfigurableSetting, ClosestCitySearchTypes
 
 
@@ -55,50 +53,45 @@ class DiscordBotClient(discord.Client):
         # Call the trade checking logic
         await check_msg_for_trade_offer(message, self)
 
-    async def on_disconnect(self):
-        print(
-            f"{datetime.now()} | Disconnected from Discord, or a connection attempt to Discord has failed, \n"
-            "this could happen either through the internet being disconnected or explicit calls being too close. \n"
-            "------"
-        )
-
     async def on_connect(self):
         print(f"{datetime.now()} | Successfully connected to Discord Services")
 
     async def on_guild_join(self, guild: discord.Guild):
-        # Prepare the greeting message
-        greeting_message = (
-            f"Hello, {guild.name}! 👋\n"
+
+        # Check if the server already has existing settings, if not, initialize them
+        fetch_or_create_settings(guild)
+
+        # Send a greeting message
+        greeting_message = create_embed(
+            "IkaDiscordBot",
+            f"Hello, {guild.name}! 👋\n\n"
+
             "I'm your friendly bot designed to assist your Ikariam endeavors. "
-            "I can help you calculate travel times, find players' cities, and more!\n\n"
-            "To get started, please configure the settings so I know which world to fetch data for. "
-            "You can use the `/set_setting world <your_world_number>` command to set the world.\n"
-            "Feel free to ask me for help with any commands!"
+            "I can help you calculate travel times, find players' cities, generate city clusters, and more!\n\n"
+
+            "To get started, please configure the settings so I know which world to fetch data for. \n"
+            "You can use the `/change_setting world <your_world_name>` command to set the world.\n"
+            "Feel free to ask me for `/help` with any commands!",
+            discord.Color.green()
         )
 
-        # Send the message to the system channel if available
         if guild.system_channel:
-            await guild.system_channel.send(greeting_message)
+            await guild.system_channel.send(embed=greeting_message)
 
 
 client = DiscordBotClient()
-server_settings = load_json_file(SETTINGS_FILE_PATH)
-server_settings = validate_server_settings(server_settings, DEFAULT_SETTINGS)
 
 
-async def run_command(interaction, command_class, command_params: dict = None):
+async def run_command(interaction: discord.Interaction, command_class, command_params: dict = None):
     """Dynamically run the logic for a given command and allow sending a response"""
     if command_params is None:
         command_params = {}
 
-    # For guilds that do not exist in server_settings, create them with defaults
-    if str(interaction.guild.id) not in server_settings:
-        server_settings[str(interaction.guild.id)] = DEFAULT_SETTINGS
-
-    save_settings(server_settings, SETTINGS_FILE_PATH)
+    # Check if the server already has existing settings, if not, initialize them
+    settings = fetch_or_create_settings(interaction.guild)
 
     # Create an instance of the command class and run it
-    command_class_instance = command_class(interaction, command_params, server_settings)
+    command_class_instance = command_class(interaction, command_params, settings)
     await command_class_instance.run()
 
 
@@ -182,7 +175,7 @@ async def list_best_islands(interaction: discord.Interaction, resource_type: Res
 @app_commands.checks.has_permissions(administrator=True)
 async def change_setting(interaction: discord.Interaction, setting: ConfigurableSetting, new_value: str):
     """Change a setting and give it a new value"""
-    await run_command(interaction, ChangeSetting, {
+    await run_command(interaction, UpdateSetting, {
         "setting_name": setting.name,
         "new_value": new_value
     })

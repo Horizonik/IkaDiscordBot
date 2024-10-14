@@ -1,10 +1,7 @@
-import json
-import os
-
 import discord
 from table2ascii import table2ascii as t2a, PresetStyle, Alignment
 
-from utils.constants import ISLAND_RANKINGS_FILE_DIR
+from database.guild_settings_manager import get_islands_data
 from utils.data_utils import fetch_data
 from utils.general_utils import create_embed, calculate_amount_of_open_spots, get_island_tier, collect_island_data, coords_to_string
 from utils.types import BaseCommand, IslandData
@@ -12,8 +9,8 @@ from utils.types import BaseCommand, IslandData
 
 class FindIsland(BaseCommand):
 
-    def __init__(self, ctx: discord.Interaction, params: dict, server_settings: dict):
-        super().__init__(ctx, params, server_settings)
+    def __init__(self, ctx: discord.Interaction, params: dict, guild_settings: dict):
+        super().__init__(ctx, params, guild_settings)
 
     async def command_logic(self):
         """
@@ -48,16 +45,6 @@ class FindIsland(BaseCommand):
 
         # noinspection PyUnresolvedReferences
         await self.ctx.response.send_message(embed=embed)
-
-    @staticmethod
-    def load_island_tiers(filepath: str):
-        """Loads island tier data from a JSON file."""
-        try:
-            with open(filepath, 'r') as file:
-                return json.load(file)
-        except FileNotFoundError as e:
-            print(f"Did not find islands data file! Error: {e}")
-            return {}
 
     def collect_player_data(self, island_data: IslandData) -> tuple[str, str]:
         player_count = {}
@@ -96,8 +83,8 @@ class FindIsland(BaseCommand):
 
     def get_result_as_embed(self, island_data: IslandData) -> discord.Embed:
         # Load island tier data from the JSON file
-        island_rankings = self.load_island_tiers(os.path.join(ISLAND_RANKINGS_FILE_DIR, f'{str(self.region_id)}_{str(self.world_id)}.json'))
-        island_data.tier = get_island_tier(island_data.coords, island_rankings)
+        island_rankings = get_islands_data(self.world_id, self.region_id)
+        island_data.tier = get_island_tier(island_data.x, island_data.y, island_rankings)
 
         # Collect island data
         table_content = collect_island_data(island_data, coords_to_string(island_data.coords))

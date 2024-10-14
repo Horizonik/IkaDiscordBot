@@ -10,18 +10,16 @@ class BaseCommand:
     ctx: discord.Interaction
     command_params: dict
     command_start_time: datetime.datetime
-    servers_settings: dict
     guild_settings: dict
     region_id: int
     world_id: int
 
-    def __init__(self, ctx: discord.Interaction, command_params: dict, server_settings: dict):
+    def __init__(self, ctx: discord.Interaction, command_params: dict, guild_settings: dict):
         # Gather basic information about queued command run
         self.ctx = ctx
         self.command_params = command_params
         self.command_start_time = datetime.datetime.now()
-        self.servers_settings = server_settings
-        self.guild_settings = server_settings[str(ctx.guild.id)]
+        self.guild_settings = guild_settings
         self.region_id = self.guild_settings['region_id']
         self.world_id = self.guild_settings['world_id']
 
@@ -31,7 +29,7 @@ class BaseCommand:
     async def run(self):
         """Run logic for the command"""
         print(
-            f"{self.command_start_time} | User {self.ctx.user.name} ran the '{self.ctx.command.name}' command with params {self.command_params}")
+            f"{self.command_start_time} | Guild: {self.ctx.guild.name} | {str(self.guild_settings['region']).upper()} {str(self.guild_settings['world']).capitalize()} | User {self.ctx.user.name} ran the '{self.ctx.command.name}' command with params {self.command_params}")
         await self.execute_with_logging()
 
     async def execute_with_logging(self):

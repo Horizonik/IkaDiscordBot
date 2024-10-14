@@ -1,6 +1,8 @@
 # IkaDiscordBot
 
-A brief description of what this project does and what it's for.
+A utility discord bot that fetches data from IkaLogs, processes it and is able to calculate complicated things based on
+it. The bot produces a variety of useful information that is focused on targeting opponents and ways of attack within
+the game.
 
 ## Table of Contents
 
@@ -11,8 +13,6 @@ A brief description of what this project does and what it's for.
 - [Contact](#contact)
 
 ## Installation
-
-A step-by-step guide on how to get your development environment set up.
 
 ```
 # Clone the repository
@@ -39,7 +39,7 @@ python bot.py
 
 1. Invite the bot to your discord server.
 2. Restart your discord to make sure the commands are updated on your end.
-3. Once the restart is complete, you can type '/' and the autocomplete will show you all of the
+3. Once the restart is complete, you can type '/' and the autocomplete will show you all the
    bot's commands.
 
 ## Commands Overview
@@ -59,8 +59,6 @@ This Discord bot includes the following commands:
 
 ## Contributing
 
-Information about contributing to the project.
-
 1. Fork the repository
 2. Create a new branch (`git checkout -b feature-foo`)
 3. Make your changes and commit them (`git commit -am 'Add some foo'`)
@@ -69,7 +67,7 @@ Information about contributing to the project.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE) file for details
 
 ## Contact
 

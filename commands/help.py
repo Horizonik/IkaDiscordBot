@@ -6,8 +6,8 @@ from utils.types import BaseCommand
 
 class HelpCommand(BaseCommand):
 
-    def __init__(self, ctx: discord.Interaction, params: dict, server_settings: dict):
-        super().__init__(ctx, params, server_settings)
+    def __init__(self, ctx: discord.Interaction, params: dict, guild_settings: dict):
+        super().__init__(ctx, params, guild_settings)
 
     async def command_logic(self):
         embed = create_embed("Help Menu", "Here are the commands you can use:")
