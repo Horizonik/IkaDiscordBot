@@ -184,44 +184,6 @@ class CityData:
         )
 
 
-class IslandData:
-    coords: tuple[int, int]
-    name: str
-    tier: str
-    x: int
-    y: int
-
-    cities: list[CityData]
-
-    wood_level: int
-
-    resource_type: str
-    resource_level: int
-
-    wonder_type: str
-    wonder_level: int
-
-    def __init__(self, data: dict, cities: list[CityData] = None):
-        # Automatically grab class annotations (aka attributes)
-        for attr, attr_type in self.__annotations__.items():
-            if attr in data:
-                setattr(self, attr, data[attr])
-
-        if cities:
-            self.cities = cities
-
-        self.name = data['island_name'] if 'island_name' in data else data['name']
-        self.coords = (data['x'], data['y'])
-
-    def __repr__(self):
-        return (
-            f"<IslandInfo=[{self.coords}], "
-            f"WONDER={self.wonder_type} [{self.wonder_level}], "
-            f"RES={self.resource_type} [{self.resource_level}], "
-            f"WOOD=[{self.wood_level}]>"
-        )
-
-
 class ConfigurableSetting(Enum):
     REGION = "region"
     WORLD = "world"

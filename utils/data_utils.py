@@ -97,12 +97,12 @@ def load_json_file(settings_file_path: str):
 #     return islands_data
 
 
-def fetch_data(query: str, player_name: str = None) -> list[CityData]:
+def fetch_data(query: str, filter_for_this_exact_name: str = None) -> list[CityData]:
     """
     Fetch city data from the Ika-logs site based on the provided query.
 
     :param query: url params for the api call.
-    :param player_name: optional - if provided, will filter the cities to only those owned by the player.
+    :param filter_for_this_exact_name: optional - if provided, will filter the cities to only those owned by the player with this exact name.
     :return: The cities data in CityInfo object format
     """
 
@@ -120,12 +120,12 @@ def fetch_data(query: str, player_name: str = None) -> list[CityData]:
         data: list[dict] = response.json()['body']['rows']
         cities = [CityData(row) for row in data]
 
-        if player_name:
+        if filter_for_this_exact_name:
             # Filter out any startsWith matches, only exact name matches will remain
-            cities = [city for city in cities if city.player_name.lower() == player_name]
+            cities = [city for city in cities if city.player_name.lower() == filter_for_this_exact_name.lower()]
 
         return cities
 
     else:
         raise ValueError(
-            f"the {f'player {player_name}' if player_name else 'alliance'} doesn't exist in this world/region")
+            f"the {f'player {filter_for_this_exact_name}' if filter_for_this_exact_name else 'alliance'} doesn't exist in this world/region")

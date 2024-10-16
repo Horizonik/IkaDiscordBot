@@ -1,36 +1,45 @@
-import math
-
-import discord
-
+from embeds.embeds import travel_time_embed
 from utils.constants import ship_units, unit_speeds
-from utils.general_utils import create_embed
+from utils.math_utils import get_distance_from_target
 from utils.types import BaseCommand
 
 
 class CalculateTravelTime(BaseCommand):
 
-    def __init__(self, ctx: discord.Interaction, params: dict, guild_settings: dict):
-        super().__init__(ctx, params, guild_settings)
-
     async def command_logic(self):
         unit_type = self.command_params.get('unit_type')
-        using_poseidon = self.command_params.get('using_poseidon', False)
-        using_oligarchy = self.command_params.get('using_oligarchy', False)
-        sea_chart_level = self.command_params.get('sea_chart_level', 0)
 
         # Validate and parse start coordinates
         try:
             start_x, start_y = map(int, self.command_params['start_coords'].split(':'))
             dest_x, dest_y = map(int, self.command_params['destination_coords'].split(':'))
         except ValueError:
-            # noinspection PyUnresolvedReferences
-            await self.ctx.response.send_message("Invalid coordinates format! Use 'XX:YY'.")
-            return
+            raise ValueError("invalid coordinates format! Use 'XX:YY'.")
 
         # Calculate Euclidean distance between the islands
-        distance = math.sqrt((dest_x - start_x) ** 2 + (dest_y - start_y) ** 2) or 0.5  # 0.5 if same island
+        distance = get_distance_from_target((start_x, start_y), (dest_x, dest_y))
+        base_speed, hours, minutes = self.calculate_travel_time(distance, unit_type)
 
-        # Base speed adjustments
+        await self.ctx.response.send_message(
+            embed=travel_time_embed(
+                unit_type=unit_type,
+                start_coords=(start_x, start_y),
+                dest_coords=(dest_x, dest_y),
+                distance=distance,
+                base_speed=base_speed,
+                hours=hours,
+                minutes=minutes
+            )
+        )
+
+    def calculate_travel_time(self, distance: float, unit_type: str) -> tuple:
+        """Calculates the travel time for a unit to reach a destination"""
+
+        # Get command parameters
+        using_poseidon = self.command_params.get('using_poseidon', False)
+        using_oligarchy = self.command_params.get('using_oligarchy', False)
+        sea_chart_level = self.command_params.get('sea_chart_level', 0)
+
         base_speed = unit_speeds.get(unit_type)
 
         # Apply Oligarchy bonus (1.10x speed if Oligarchy is active)
@@ -43,7 +52,7 @@ class CalculateTravelTime(BaseCommand):
 
         # Apply Poseidon Miracle bonus
         if using_poseidon:
-            base_speed *= 1.5
+            base_speed *= 2
 
         # Time to travel in minutes = 1200 / speed * distance
         travel_time_minutes = (1200 / base_speed) * distance
@@ -52,10 +61,4 @@ class CalculateTravelTime(BaseCommand):
         hours = int(travel_time_minutes // 60)
         minutes = int(travel_time_minutes % 60)
 
-        # noinspection PyUnresolvedReferences
-        await self.ctx.response.send_message(
-            embed=create_embed(
-                f"{unit_type.name.replace('_', ' ').title()} from {start_x}:{start_y} to {dest_x}:{dest_y}.",
-                f"Travel time is approximately {f'{hours} hours' if hours > 0 else ''}{f' and {minutes} minutes' if minutes > 0 else ''}."
-            )
-        )
+        return base_speed, hours, minutes

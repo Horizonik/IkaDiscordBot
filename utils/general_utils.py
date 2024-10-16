@@ -1,8 +1,6 @@
 import random
 from collections import defaultdict
 
-import discord
-
 from utils.constants import GOOD_WONDERS
 from utils.math_utils import get_distance_from_target
 from utils.types import CityData, ResourceType, WonderType
@@ -77,17 +75,35 @@ def rank_islands(islands_data: list[dict], resource_type: ResourceType = None, m
     return ranked_islands
 
 
+# def assign_rank_tiers(ranked_islands: list[tuple[IslandData, int]]) -> list[IslandData]:
+#     # Extract scores and calculate min and max
+#     scores = [score for _, score in ranked_islands]
+#     max_score = max(scores)
+#     min_score = min(scores)
+#
+#     # Define thresholds for letter-based ranking
+#     def get_letter_rank(score: int) -> str:
+#         score_range = max_score - min_score
+#         if score >= min_score + 0.8 * score_range:
+#             return 'S'
+#         elif score >= min_score + 0.6 * score_range:
+#             return 'A'
+#         elif score >= min_score + 0.4 * score_range:
+#             return 'B'
+#         elif score >= min_score + 0.2 * score_range:
+#             return 'C'
+#         else:
+#             return 'D'
+#
+#     # Assign letter rankings based on score
+#     for island, score in ranked_islands:
+#         island.tier = get_letter_rank(score)
+#
+#     # Discard the scores now that each island has a tier
+#     return [island for island, score in ranked_islands]
+
 def truncate_string(raw_string: str, char_limit: int):
     return raw_string if len(raw_string) <= char_limit else raw_string[:char_limit - 2] + '..'
-
-
-def create_embed(title: str = "", description: str = "", color: discord.Color = discord.Color.blue()) -> discord.Embed:
-    """Standardize all embeds"""
-
-    embed = discord.Embed(title=title, description=description, color=color)
-    embed.set_footer(text="© IkaDiscordBot, by Gemesil")
-
-    return embed
 
 
 def calculate_amount_of_open_spots(island_data: dict) -> int:
