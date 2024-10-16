@@ -1,7 +1,8 @@
 import random
 from collections import defaultdict
+from typing import LiteralString
 
-from utils.constants import GOOD_WONDERS
+from utils.constants import GOOD_WONDERS, BOT_EMJOIS
 from utils.math_utils import get_distance_from_target
 from utils.types import CityData, ResourceType, WonderType
 
@@ -75,39 +76,12 @@ def rank_islands(islands_data: list[dict], resource_type: ResourceType = None, m
     return ranked_islands
 
 
-# def assign_rank_tiers(ranked_islands: list[tuple[IslandData, int]]) -> list[IslandData]:
-#     # Extract scores and calculate min and max
-#     scores = [score for _, score in ranked_islands]
-#     max_score = max(scores)
-#     min_score = min(scores)
-#
-#     # Define thresholds for letter-based ranking
-#     def get_letter_rank(score: int) -> str:
-#         score_range = max_score - min_score
-#         if score >= min_score + 0.8 * score_range:
-#             return 'S'
-#         elif score >= min_score + 0.6 * score_range:
-#             return 'A'
-#         elif score >= min_score + 0.4 * score_range:
-#             return 'B'
-#         elif score >= min_score + 0.2 * score_range:
-#             return 'C'
-#         else:
-#             return 'D'
-#
-#     # Assign letter rankings based on score
-#     for island, score in ranked_islands:
-#         island.tier = get_letter_rank(score)
-#
-#     # Discard the scores now that each island has a tier
-#     return [island for island, score in ranked_islands]
-
 def truncate_string(raw_string: str, char_limit: int):
     return raw_string if len(raw_string) <= char_limit else raw_string[:char_limit - 2] + '..'
 
 
-def calculate_amount_of_open_spots(island_data: dict) -> int:
-    return 16 - island_data['taken_spots']
+def get_amount_of_open_spots(taken_spots: int) -> int:
+    return 16 - taken_spots
 
 
 def get_island_tier(x_pos: int, y_pos: int, islands_data: list[dict]) -> str:
@@ -124,7 +98,7 @@ def get_island_tier(x_pos: int, y_pos: int, islands_data: list[dict]) -> str:
 
 def collect_island_data(island_data: dict, coords: tuple) -> list[tuple | int | str]:
     # Format island information
-    open_spots = calculate_amount_of_open_spots(island_data)
+    open_spots = get_amount_of_open_spots(island_data['taken_spots'] if 'taken_spots' in island_data else len(island_data['cities']))
     wonder_info = f"[{island_data['wonder_level']}]{truncate_string(island_data['wonder_type'], 6).capitalize()}"
     resource_info = f"[{island_data['resource_level']}]{truncate_string(island_data['resource_type'], 6).capitalize()}"
 
@@ -138,3 +112,11 @@ def coords_to_string(coords: tuple):
 
 def str_and_lower(raw_string: any) -> str:
     return str(raw_string).lower()
+
+
+def convert_to_emojis(message: LiteralString):
+    # Split the resources (comma-separated)
+    split_message = [substring.strip() for substring in message.split(",")]
+
+    # Convert to emoji if available, otherwise keep the original name
+    return ", ".join([BOT_EMJOIS.get(substring.lower(), substring) for substring in split_message])

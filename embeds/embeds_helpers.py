@@ -6,7 +6,7 @@ from utils.math_utils import get_distance_from_target
 from utils.types import CityData
 
 
-def create_embed(title: str = "", description: str = "", color: discord.Color = discord.Color.blue(), fields=None) -> discord.Embed:
+def create_embed(title: str = "", description: str = "", color: discord.Color = discord.Color.blue(), fields: list = None, footer: tuple = None) -> discord.Embed:
     """Standardize all embeds"""
 
     if fields is None:
@@ -17,6 +17,9 @@ def create_embed(title: str = "", description: str = "", color: discord.Color = 
 
     for name, value, inline in fields:
         embed.add_field(name=name, value=value, inline=inline)
+
+    if footer:
+        embed.set_footer(text=footer[0], icon_url=footer[1])
 
     return embed
 

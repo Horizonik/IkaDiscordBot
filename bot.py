@@ -12,6 +12,7 @@ from commands.list_best_islands import ListBestIslands
 from commands.manage_settings import ResetSettings, ShowSettings, UpdateSetting
 from commands.travel_time import CalculateTravelTime
 from database.guild_settings_manager import fetch_or_create_settings
+from embeds.embeds import welcome_message_embed
 from handlers.trade_matcher import check_msg_for_trade_offer
 from utils.constants import (
     CALCULATE_CLUSTERS_DESCRIPTION,
@@ -22,7 +23,6 @@ from utils.constants import (
     BOT_TOKEN,
     CHANGE_SETTING_DESCRIPTION, FIND_ISLAND_DESCRIPTION
 )
-from utils.general_utils import create_embed
 from utils.types import WonderType, ResourceType, UnitType, ConfigurableSetting, ClosestCitySearchTypes
 
 
@@ -62,18 +62,7 @@ class DiscordBotClient(discord.Client):
         fetch_or_create_settings(guild)
 
         # Send a greeting message
-        greeting_message = create_embed(
-            "IkaDiscordBot",
-            f"Hello, {guild.name}! 👋\n\n"
-
-            "I'm your friendly bot designed to assist your Ikariam endeavors. "
-            "I can help you calculate travel times, find players' cities, generate city clusters, and more!\n\n"
-
-            "To get started, please configure the settings so I know which world to fetch data for. \n"
-            "You can use the `/change_setting world <your_world_name>` command to set the world.\n"
-            "Feel free to ask me for `/help` with any commands!",
-            discord.Color.green()
-        )
+        greeting_message = welcome_message_embed(guild)
 
         if guild.system_channel:
             await guild.system_channel.send(embed=greeting_message)

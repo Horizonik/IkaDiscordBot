@@ -22,7 +22,7 @@ e_very_outraged = '<:very_outraged:1287536914160816128>'
 e_ecstatic = ' <:ecstatic:1287536875938123839>'
 e_outraged = ' <:outraged:1287536862075945030>'
 
-RESOURCE_EMOJIS = {
+BOT_EMJOIS = {
     "marble": '<:marble:1289267605055475762>',
     "wood": '<:wood:1289267533484134400>',
     "wine": '<:wine:1289267622931599441>',

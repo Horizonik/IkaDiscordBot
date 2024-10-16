@@ -33,3 +33,31 @@
 #     world_id = get_value_from_mappings(args.world, WORLD_MAPPINGS)
 #
 #     fetch_rank_all_islands_and_save_to_file(world_id, region_id)
+
+
+# def assign_rank_tiers(ranked_islands: list[tuple[IslandData, int]]) -> list[IslandData]:
+#     # Extract scores and calculate min and max
+#     scores = [score for _, score in ranked_islands]
+#     max_score = max(scores)
+#     min_score = min(scores)
+#
+#     # Define thresholds for letter-based ranking
+#     def get_letter_rank(score: int) -> str:
+#         score_range = max_score - min_score
+#         if score >= min_score + 0.8 * score_range:
+#             return 'S'
+#         elif score >= min_score + 0.6 * score_range:
+#             return 'A'
+#         elif score >= min_score + 0.4 * score_range:
+#             return 'B'
+#         elif score >= min_score + 0.2 * score_range:
+#             return 'C'
+#         else:
+#             return 'D'
+#
+#     # Assign letter rankings based on score
+#     for island, score in ranked_islands:
+#         island.tier = get_letter_rank(score)
+#
+#     # Discard the scores now that each island has a tier
+#     return [island for island, score in ranked_islands]

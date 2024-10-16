@@ -2,8 +2,8 @@ import discord
 from table2ascii import table2ascii as t2a, PresetStyle, Alignment
 
 from database.guild_settings_manager import get_islands_data
-from embeds_helpers import create_embed, city_to_ascii_table_row, get_island_residents_info_embed
-from utils.general_utils import truncate_string, get_island_tier, coords_to_string, collect_island_data, calculate_amount_of_open_spots
+from embeds.embeds_helpers import create_embed, city_to_ascii_table_row, get_island_residents_info_embed
+from utils.general_utils import truncate_string, get_island_tier, coords_to_string, collect_island_data, get_amount_of_open_spots
 from utils.types import CityData, UnitType
 
 
@@ -87,7 +87,7 @@ def find_island_embed(island_cities_data: list[CityData], world_id: int, region_
         title=f"Stats for island {coords_to_string(island_data['coords'])} {island_data['island_name']}",
         description=(
             f"A beautiful {str(island_data['resource_type'])} {str(island_data['wonder_type'])} island "
-            f"with {calculate_amount_of_open_spots(island_data.__dict__)} open spots."
+            f"with {get_amount_of_open_spots(len(island_cities_data))} open spots."
         ),
         fields=[
             ("Island Information", f"```\n{table_content}\n```", False),
@@ -191,4 +191,38 @@ def travel_time_embed(unit_type: UnitType, start_coords: tuple, dest_coords: tup
             ("Distance", distance, True),
             ("Travel Time", f"{hours} hours and {minutes} minutes", True),
         ]
+    )
+
+
+def trade_offer_embed(offer: str, want: str, author: discord.Member) -> discord.Embed:
+    return create_embed(
+        description=f"{author.mention} is looking to trade: {offer} for {want}",
+        footer=(
+            "This offer will expire in 1 day. Post your own offer by typing 'Trade: (resource1) for (resource2)' "
+            f"or message {author.name} directly to notify them about the trade", author.avatar.url
+        )
+    )
+
+
+def trade_dm_embed(trade: dict, matching_offer_author: discord.User) -> discord.Embed:
+    return create_embed(
+        title="a matching trade has been found!",
+        description=f"<@{matching_offer_author.id}> is looking to trade: {trade['have']} for {trade['want']}",
+        color=discord.Color.green(),
+        footer=("Contact the user directly to finalize the trade", matching_offer_author.avatar.url)
+    )
+
+
+def welcome_message_embed(guild: discord.Guild):
+    create_embed(
+        "IkaDiscordBot",
+        f"Hello, {guild.name}! 👋\n\n"
+
+        "I'm your friendly bot designed to assist your Ikariam endeavors. "
+        "I can help you calculate travel times, find players' cities, generate city clusters, and more!\n\n"
+
+        "To get started, please configure the settings so I know which world to fetch data for. \n"
+        "You can use the `/change_setting world <your_world_name>` command to set the world.\n"
+        "Feel free to ask me for `/help` with any commands!",
+        discord.Color.green()
     )
